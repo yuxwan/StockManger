@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 所有按钮点击后不保留聚焦样式 */
+button:focus,
+button:focus-visible,
+.n-button:focus,
+.n-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cfc4c5;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7e7576;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #444;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* ── Naive UI 表单组件统一样式 ── */
+/* 所有组件统一圆角 */
+.n-input,
+.n-input-number .n-input,
+.n-select .n-base-selection,
+.n-date-picker .n-input {
+  border-radius: 0.75rem !important;
+}
+
+/* ── Naive UI DataTable 分页圆角 ── */
+.n-data-table .n-pagination .n-pagination-item {
+  border-radius: 6px !important;
+}
+.n-data-table .n-pagination .n-base-selection,
+.n-data-table .n-pagination .n-base-selection .n-base-selection-label {
+  border-radius: 6px !important;
+}
+
+/* ── Naive UI DataTable 无边框 ── */
+.n-data-table .n-data-table-base-table-header,
+.n-data-table .n-data-table-tr {
+  border: none !important;
+}
+.n-data-table .n-data-table-base-table-border {
+  border: none !important;
+}
+
+/* 路由切换动画 */
+.page-enter-active {
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+}
+.page-leave-active {
+  transition: opacity 100ms ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(-16px);
+}
+.page-leave-to {
+  opacity: 0;
+}

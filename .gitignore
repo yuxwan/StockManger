@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+Thumbs.db
+back/Stock/target/
+back/Stock/*.iml
+back/Stock/.idea/
+desktop/dist/
+desktop/release/
+desktop/node_modules/
