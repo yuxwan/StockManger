@@ -102,7 +102,6 @@ onMounted(async () => {
     <n-layout-header style="height: 40px; -webkit-app-region: drag"
       class="flex items-center justify-between bg-surface-container dark:bg-[#252525] text-on-surface dark:text-inverse-on-surface select-none shrink-0 border-b border-outline-variant/50 dark:border-[#333]">
       <div class="flex items-center gap-2 pl-4 text-sm font-body font-semibold tracking-wider uppercase">
-        <Icon icon="logos:electron" width="16" height="16" />
         <span>STOCK</span>
       </div>
       <div class="flex h-full items-center gap-1 pr-2" style="-webkit-app-region: no-drag">

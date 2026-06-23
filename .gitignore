@@ -10,3 +10,5 @@ back/Stock/.idea/
 desktop/dist/
 desktop/release/
 desktop/node_modules/
+desktop/out/
+*.psd

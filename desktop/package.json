@@ -24,7 +24,7 @@
           ]
         }
       ],
-      "icon": null
+      "icon": "logo.png"
     },
     "nsis": {
       "oneClick": false,

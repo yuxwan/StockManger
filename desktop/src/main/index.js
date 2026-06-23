@@ -10,6 +10,7 @@ function createWindow() {
     width: 1366,
     height: 900,
     frame: false,
+    icon: join(__dirname, '../../logo.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
