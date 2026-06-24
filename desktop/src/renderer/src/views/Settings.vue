@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { authApi, userApi } from '../api'
@@ -9,6 +9,15 @@ const router = useRouter()
 const showPwdForm = ref(false)
 const submitting = ref(false)
 const pwdForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
+const appVersion = ref('')
+
+onMounted(async () => {
+  if (window.electronAPI?.getAppVersion) {
+    appVersion.value = await window.electronAPI.getAppVersion()
+  } else {
+    appVersion.value = '1.0.0'
+  }
+})
 
 function toggleDark() {
   document.documentElement.classList.toggle('dark')
@@ -21,6 +30,15 @@ async function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('userRole')
   router.push('/login')
+}
+
+function checkForUpdates() {
+  const api = window.electronAPI
+  if (api?.checkUpdate) {
+    api.checkUpdate()
+  } else {
+    message.info('当前环境不支持自动更新')
+  }
 }
 
 async function changePassword() {
@@ -113,7 +131,20 @@ async function changePassword() {
           <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">版本</div>
           <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">当前版本号</div>
         </div>
-        <span class="text-xs text-on-surface-variant dark:text-gray-500 font-mono">v1.0.0</span>
+        <span class="text-xs text-on-surface-variant dark:text-gray-500 font-mono">v{{ appVersion }}</span>
+      </div>
+
+      <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
+
+      <div class="flex items-center justify-between py-3">
+        <div>
+          <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">检查更新</div>
+          <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">检查是否有新版本可用</div>
+        </div>
+        <button
+          class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black hover:opacity-80"
+          @click="checkForUpdates"
+        >检查</button>
       </div>
     </div>
 

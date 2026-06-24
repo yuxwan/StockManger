@@ -97,27 +97,37 @@ public class ReportServiceImpl implements ReportService {
                     return m;
                 }).collect(Collectors.toList());
 
-        // 热销商品
-        List<OrderItem> allItems = orderItemMapper.selectList(null);
-        Map<String, long[]> productSalesMap = new HashMap<>();
-        for (OrderItem item : allItems) {
-            productSalesMap.compute(item.getProductName(), (k, v) -> {
-                if (v == null) v = new long[2];
-                v[0] += item.getQuantity();
-                v[1] += item.getSubtotal().longValue();
-                return v;
-            });
+        // 热销商品（按时间范围过滤）
+        List<Long> orderIds = orders.stream()
+                .filter(o -> "completed".equals(o.getStatus()))
+                .map(Order::getId)
+                .collect(Collectors.toList());
+
+        List<Map<String, Object>> topProducts = new ArrayList<>();
+        if (!orderIds.isEmpty()) {
+            LambdaQueryWrapper<OrderItem> itemQw = new LambdaQueryWrapper<OrderItem>()
+                    .in(OrderItem::getOrderId, orderIds);
+            List<OrderItem> allItems = orderItemMapper.selectList(itemQw);
+            Map<String, long[]> productSalesMap = new HashMap<>();
+            for (OrderItem item : allItems) {
+                productSalesMap.compute(item.getProductName(), (k, v) -> {
+                    if (v == null) v = new long[2];
+                    v[0] += item.getQuantity();
+                    v[1] += item.getSubtotal().longValue();
+                    return v;
+                });
+            }
+            topProducts = productSalesMap.entrySet().stream()
+                    .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
+                    .limit(10)
+                    .map(e -> {
+                        Map<String, Object> m = new HashMap<>();
+                        m.put("name", e.getKey());
+                        m.put("qty", e.getValue()[0]);
+                        m.put("revenue", e.getValue()[1]);
+                        return m;
+                    }).collect(Collectors.toList());
         }
-        List<Map<String, Object>> topProducts = productSalesMap.entrySet().stream()
-                .sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0]))
-                .limit(10)
-                .map(e -> {
-                    Map<String, Object> m = new HashMap<>();
-                    m.put("name", e.getKey());
-                    m.put("qty", e.getValue()[0]);
-                    m.put("revenue", e.getValue()[1]);
-                    return m;
-                }).collect(Collectors.toList());
 
         // 分类汇总（简化：全部归为"商品"）
         List<Map<String, Object>> categorySummary = List.of(

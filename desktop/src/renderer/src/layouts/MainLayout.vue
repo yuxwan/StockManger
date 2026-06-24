@@ -9,6 +9,11 @@ const router = useRouter()
 const isMaximized = ref(false)
 const isDark = ref(false)
 const sidebarCollapsed = ref(true)
+const refreshTick = ref(0)
+
+function refreshPage() {
+  refreshTick.value++
+}
 const electronAPI = window.electronAPI || { minimize: () => { }, maximize: () => { }, close: () => { }, isMaximized: async () => false }
 
 function renderIcon(iconName) {
@@ -109,6 +114,16 @@ onMounted(async () => {
           <template #trigger>
             <button
               class="w-9 h-[28px] flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10"
+              @click="refreshPage">
+              <Icon icon="mdi:refresh" width="16" />
+            </button>
+          </template>
+          <span>刷新页面</span>
+        </n-tooltip>
+        <n-tooltip trigger="hover" :placement="'bottom'" :delay="500">
+          <template #trigger>
+            <button
+              class="w-9 h-[28px] flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10"
               @click="toggleTheme">
               <Icon v-if="!isDark" icon="mdi:weather-night" width="16" />
               <Icon v-else icon="mdi:weather-sunny" width="16" />
@@ -201,7 +216,7 @@ onMounted(async () => {
         <main class="flex-1 flex flex-col p-8 overflow-auto" style="min-height: 0; height: calc(100vh - 40px);">
           <router-view v-slot="{ Component }">
             <Transition name="page" mode="out-in">
-              <component :is="Component" :key="$route.fullPath" />
+              <component :is="Component" :key="`${$route.fullPath}_${refreshTick}`" />
             </Transition>
           </router-view>
         </main>

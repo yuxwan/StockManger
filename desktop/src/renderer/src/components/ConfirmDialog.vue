@@ -1,11 +1,19 @@
 <template>
   <Transition name="confirm">
-    <div v-if="show" class="fixed inset-0 z-[200] flex items-center justify-center" @click.self="onCancel">
+    <div v-if="show" class="fixed inset-0 z-[10] flex items-center justify-center">
       <div class="fixed inset-0 bg-black/30 dark:bg-black/50" />
       <div
         class="relative rounded-2xl bg-surface dark:bg-[#252525] shadow-xl border border-outline-variant/20 dark:border-[#333]"
         :style="{ width }"
       >
+        <button @click="onCancel"
+          class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-lg text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
         <!-- 标题 -->
         <div class="flex items-center gap-3 px-6 pt-6" v-if="title || $slots.header">
           <div v-if="iconType === 'warning'"

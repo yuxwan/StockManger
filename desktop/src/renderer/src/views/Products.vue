@@ -121,24 +121,24 @@ const isCashier = localStorage.getItem('userRole') === 'cashier'
 
 const productColumns = computed(() => {
   const cols = [
-    { title: '条码', key: 'barcode'},
-    { title: '商品名称', key: 'name' },
-    { title: '规格型号', key: 'spec' },
-    { title: '存放位置', key: 'location' },
-    { title: '有效期', key: 'expiry' },
+    { title: '条码', key: 'barcode', minWidth: 120 },
+    { title: '商品名称', key: 'name', minWidth: 150 },
+    { title: '规格型号', key: 'spec', minWidth: 120 },
+    { title: '存放位置', key: 'location', minWidth: 100 },
+    { title: '有效期', key: 'expiry', minWidth: 120 },
     {
-      title: '销售价', key: 'price', className: 'text-right',
+      title: '销售价', key: 'price', className: 'text-right', minWidth: 90,
       render(row) { return h('span', '¥' + row.price) }
     }
   ]
   if (!isCashier) {
     cols.push({
-      title: '进货价', key: 'purchasePrice', className: 'text-right',
+      title: '进货价', key: 'purchasePrice', className: 'text-right', minWidth: 90,
       render(row) { return h('span', row.purchasePrice ? '¥' + row.purchasePrice : '-') }
     })
   }
   cols.push({
-    title: '库存', key: 'stock', className: 'text-right',
+    title: '库存', key: 'stock', className: 'text-right', minWidth: 90,
     render(row) {
       const isLow = row.stock < lowStockThreshold
       return h('span', {
@@ -148,12 +148,12 @@ const productColumns = computed(() => {
   })
   if (!isCashier) {
     cols.push({
-      title: '小计', key: 'subtotal', className: 'text-right',
+      title: '小计', key: 'subtotal', className: 'text-right', minWidth: 100,
       render(row) { return h('span', '¥' + ((row.purchasePrice || row.price) * row.stock).toLocaleString()) }
     })
   }
   cols.push({
-    title: '操作', key: 'actions', width: 260, className: 'text-center',
+    title: '操作', key: 'actions', width: 260, fixed: 'right',
     render(row) {
       return h('div', { class: 'inline-flex items-center gap-0.5' }, [
         h('button', {
@@ -333,7 +333,7 @@ function doPrint() {
           <span class="text-sm font-body">暂无商品</span>
         </div>
         <div v-else>
-          <n-data-table :bordered="false" :columns="productColumns" :data="paginatedProducts" size="small" />
+          <n-data-table :bordered="false" :columns="productColumns" :data="paginatedProducts" size="small" scroll-x="1200" />
         </div>
       </n-card>
 

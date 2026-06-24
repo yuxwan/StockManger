@@ -135,23 +135,23 @@ const filteredOrders = computed(() => {
 
 
 const orderColumns = [
-  { title: '订单号', key: 'orderNo', width: 160 },
-  { title: '时间', key: 'createTime', width: 160 },
+  { title: '订单号', key: 'orderNo', minWidth: 200 },
+  { title: '时间', key: 'createTime', minWidth: 160 },
   {
-    title: '支付方式', key: 'payment', width: 100,
+    title: '支付方式', key: 'payment', minWidth: 100,
     render(row) {
       return h('span', { class: 'inline-flex items-center gap-1' }, [
         h('span', paymentLabels[row.payment] || row.payment)
       ])
     }
   },
-  { title: '商品数', key: 'itemCount', width: 80 },
+  { title: '商品数', key: 'itemCount', minWidth: 80 },
   {
-    title: '金额', key: 'total', width: 100, className: 'text-right',
+    title: '金额', key: 'total', minWidth: 100, className: 'text-right',
     render(row) { return h('span', { class: 'font-semibold' }, '¥' + (row.total?.toFixed(2) || '0.00')) }
   },
   {
-    title: '状态', key: 'status', width: 80, className: 'text-right',
+    title: '状态', key: 'status', minWidth: 80, className: 'text-right',
     render(row) {
       const isCompleted = row.status === 'completed'
       return h('span', {
@@ -163,7 +163,7 @@ const orderColumns = [
     }
   },
   {
-    title: '操作', key: 'actions', width: 60, className: 'text-center',
+    title: '操作', key: 'actions', width: 150, fixed: 'right',
     render(row) {
       return h('div', { class: 'inline-flex items-center gap-0.5' }, [
         h('button', {
@@ -223,7 +223,7 @@ const totalRevenue = computed(() =>
         <span class="text-sm font-body">暂无订单</span>
       </div>
       <div v-else>
-        <n-data-table :bordered="false" :columns="orderColumns" :data="paginatedOrders" size="small" />
+        <n-data-table :bordered="false" :columns="orderColumns" :data="paginatedOrders" size="small" scroll-x="900" />
       </div>
     </n-card>
     <div class="flex justify-end pt-2">

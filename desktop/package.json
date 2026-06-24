@@ -1,6 +1,6 @@
 {
   "name": "desktop-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Electron + Vue3 desktop app",
   "main": "./out/main/index.js",
   "scripts": {
@@ -16,6 +16,7 @@
       "output": "release"
     },
     "win": {
+      "artifactName": "Stock.${ext}",
       "target": [
         {
           "target": "nsis",
@@ -24,17 +25,27 @@
           ]
         }
       ],
-      "icon": "logo.png"
+      "icon": "logo.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "include": "build/installer.nsh"
     },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://yuxwan.com/download/stock/",
+        "channel": "latest"
+      }
+    ],
     "files": [
-      "out/**/*",
-      "!node_modules/**/*"
+      "out/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/electron-updater/**"
     ]
   },
   "dependencies": {
@@ -42,6 +53,7 @@
     "@vuepic/vue-datepicker": "^14.0.0",
     "axios": "^1.18.1",
     "echarts": "^6.1.0",
+    "electron-updater": "^6.8.9",
     "jsbarcode": "^3.12.3",
     "naive-ui": "^2.44.1",
     "pinia": "^2.3.1",

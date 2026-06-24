@@ -148,14 +148,14 @@ onMounted(() => {
 
     <!-- 角色列表 -->
     <n-card size="small" :bordered="false" style="flex:1">
-      <n-data-table :bordered="false" :loading="loading" size="small"
+      <n-data-table :bordered="false" :loading="loading" size="small" scroll-x="800"
         :columns="[
-          { title: 'ID', key: 'id' },
-          { title: '角色名称', key: 'name' },
-          { title: '角色编码', key: 'code' },
+          { title: 'ID', key: 'id', minWidth: 60 },
+          { title: '角色名称', key: 'name', minWidth: 120 },
+          { title: '角色编码', key: 'code', minWidth: 120 },
           { title: '备注', key: 'remark', ellipsis: { tooltip: true }, width: 200 },
           {
-            title: '状态', key: 'status',
+            title: '状态', key: 'status', minWidth: 60,
             render(row) {
               return h('span', {
                 class: row.status === 1
@@ -165,7 +165,7 @@ onMounted(() => {
             }
           },
           {
-            title: '操作', key: 'actions', width: 130,
+            title: '操作', key: 'actions', width: 130, fixed: 'right',
             render(row) {
               return h('div', { class: 'inline-flex items-center gap-0.5' }, [
                 h('button', {

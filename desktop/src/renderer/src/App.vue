@@ -5,6 +5,7 @@
       <n-message-provider>
         <n-dialog-provider>
           <router-view />
+          <UpdateDialog />
         </n-dialog-provider>
       </n-message-provider>
     </n-loading-bar-provider>
@@ -15,6 +16,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { darkTheme } from 'naive-ui'
 import LoadingBarInit from './components/LoadingBarInit.vue'
+import UpdateDialog from './components/UpdateDialog.vue'
 
 const isDark = ref(document.documentElement.classList.contains('dark'))
 let observer

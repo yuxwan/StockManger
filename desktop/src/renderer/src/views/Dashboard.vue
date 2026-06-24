@@ -142,74 +142,6 @@ const trendOption = computed(() => ({
 }))
 
 // ── 分类饼图 ──
-const pieColors = [
-  isDark.value ? '#ffffff' : '#000000',
-  isDark.value ? '#888' : '#666',
-  isDark.value ? '#aaa' : '#999',
-  '#f59e0b',
-  '#10b981'
-]
-
-const pieOption = computed(() => ({
-  textStyle: {
-    fontFamily: '"Plus Jakarta Sans"',
-    fontSize: 12
-  },
-  tooltip: {
-    trigger: 'item',
-    backgroundColor: isDark.value ? '#252525' : '#ffffff',
-    borderColor: 'transparent',
-    textStyle: {
-      color: isDark.value ? '#f2f0f0' : '#1b1c1c',
-      fontSize: 13
-    },
-    formatter: (p) => {
-      const pct = Number(p.percent).toFixed(1)
-      return `${p.name}<br/>¥${p.value.toLocaleString()}（${pct}%）`
-    }
-  },
-  series: [
-    {
-      type: 'pie',
-      radius: ['40%', '70%'],
-      center: ['50%', '55%'],
-      avoidLabelOverlap: true,
-      padAngle: 2,
-      itemStyle: {
-        borderRadius: 6,
-        borderColor: isDark.value ? '#1a1a1a' : '#f2f0f0',
-        borderWidth: 3
-      },
-      label: {
-        show: true,
-        position: 'outside',
-        formatter: '{b}',
-        fontFamily: '"Hanken Grotesk"',
-        fontWeight: 600,
-        fontSize: 11,
-        color: isDark.value ? '#ccc' : '#555'
-      },
-      labelLine: {
-        lineStyle: {
-          color: isDark.value ? '#555' : '#ccc'
-        }
-      },
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: 'rgba(0,0,0,0.2)'
-        }
-      },
-      data: store.categorySummary.map((c, i) => ({
-        name: c.name,
-        value: c.value,
-        itemStyle: { color: pieColors[i % pieColors.length] }
-      }))
-    }
-  ]
-}))
-
 // ── 支付方式柱状图 ──
 const paymentOption = computed(() => ({
   textStyle: {
@@ -307,17 +239,17 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
     </div>
 
     <!-- ═══ 统计卡片（数据来自 reports store，跟随时间筛选） ═══ -->
-    <div class="grid grid-cols-4 gap-4">
+    <div class="grid grid-cols-4 gap-4 w-full">
       <n-card>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3 h-full">
           <div
             class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
             <Icon icon="mdi:cash" width="20" class="text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div class="min-w-0">
+          <div class="flex flex-col justify-center">
             <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body">总营收</div>
             <div class="text-xl font-body font-bold tracking-tight">¥{{ store.totalRevenue.toLocaleString() }}</div>
-            <div v-if="yesterdayRevenue != null" class="flex items-center gap-0.5 mt-0.5">
+            <div v-if="yesterdayRevenue != null" class="flex items-center justify-center gap-0.5 mt-0.5">
               <Icon :icon="Number(yesterdayRevenue) >= 0 ? 'mdi:trending-up' : 'mdi:trending-down'" width="14"
                 :class="Number(yesterdayRevenue) >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'" />
               <span class="text-xs font-body font-semibold"
@@ -333,14 +265,14 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
 
       <!-- 订单数 -->
       <n-card>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3 h-full">
           <div class="w-11 h-11 rounded-xl bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
             <Icon icon="mdi:shopping-outline" width="20" class="text-blue-600 dark:text-blue-400" />
           </div>
-          <div class="min-w-0">
+          <div class="flex flex-col justify-center">
             <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body">订单数</div>
             <div class="text-xl font-body font-bold tracking-tight">{{ store.totalOrders }} 单</div>
-            <div v-if="yesterdayOrders != null" class="flex items-center gap-0.5 mt-0.5">
+            <div v-if="yesterdayOrders != null" class="flex items-center justify-center gap-0.5 mt-0.5">
               <Icon :icon="Number(yesterdayOrders) >= 0 ? 'mdi:trending-up' : 'mdi:trending-down'" width="14"
                 :class="Number(yesterdayOrders) >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'" />
               <span class="text-xs font-body font-semibold"
@@ -355,12 +287,12 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
 
       <!-- 平均客单价 -->
       <n-card>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3 h-full">
           <div
             class="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center shrink-0">
             <Icon icon="mdi:receipt-text-outline" width="20" class="text-purple-600 dark:text-purple-400" />
           </div>
-          <div class="min-w-0">
+          <div class="flex flex-col justify-center">
             <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body">平均客单价</div>
             <div class="text-xl font-body font-bold tracking-tight">¥{{ store.avgOrderValue.toLocaleString() }}</div>
           </div>
@@ -369,11 +301,11 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
 
       <!-- 退款 -->
       <n-card>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3 h-full">
           <div class="w-11 h-11 rounded-xl bg-red-100 dark:bg-red-950/30 flex items-center justify-center shrink-0">
             <Icon icon="mdi:undo-variant" width="20" class="text-red-600 dark:text-red-400" />
           </div>
-          <div class="min-w-0">
+          <div class="flex flex-col justify-center">
             <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body">退款</div>
             <div class="text-xl font-body font-bold tracking-tight text-red-600 dark:text-red-400">
               {{ store.refundCount }} 单
@@ -404,7 +336,8 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
       </n-card>
 
       <!-- 低库存预警 -->
-      <n-card style="flex:2;display:flex;flex-direction:column" content-style="display:flex;flex-direction:column;flex:1;min-height:0;padding:24px">
+      <n-card style="flex:2;display:flex;flex-direction:column"
+        content-style="display:flex;flex-direction:column;flex:1;min-height:0;padding:24px">
         <div class="flex items-center gap-2 mb-4">
           <Icon icon="mdi:alert-circle-outline" width="18" class="text-amber-500" />
           <h2 class="text-sm font-body font-semibold tracking-tight">低库存预警</h2>
@@ -416,7 +349,8 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
         <div v-else class="flex-1 flex flex-col gap-3 overflow-auto">
           <div v-for="item in store.lowStockProducts" :key="item.id"
             class="flex items-center justify-between py-2.5 px-3 rounded-xl bg-surface dark:bg-[#1a1a1a]">
-            <span class="text-sm font-body text-on-surface dark:text-inverse-on-surface truncate mr-2">{{ item.name }}</span>
+            <span class="text-sm font-body text-on-surface dark:text-inverse-on-surface truncate mr-2">{{ item.name
+              }}</span>
             <span class="shrink-0 text-xs font-body font-semibold px-2 py-0.5 rounded-md" :class="item.stock <= 3
               ? 'bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400'
               : 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300'">
@@ -427,26 +361,9 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
       </n-card>
     </div>
 
-    <!-- ═══ 分隔线 ═══ -->
-    <div class="flex items-center gap-3 pt-2">
-      <div class="h-px flex-1 bg-outline-variant/50 dark:bg-[#333]"></div>
-      <span
-        class="text-xs font-body font-semibold uppercase tracking-widest text-on-surface-variant/50 dark:text-gray-600">详细分析</span>
-      <div class="h-px flex-1 bg-outline-variant/50 dark:bg-[#333]"></div>
-    </div>
 
-    <!-- ═══ 图表行：分类饼图 + 支付方式 ═══ -->
+    <!-- ═══ 图表行：支付方式 + 热销商品排行 ═══ -->
     <div class="flex gap-4 min-h-[350px]">
-      <n-card style="flex:1" content-style="display:flex;flex-direction:column;flex:1;min-height:0;padding:24px">
-        <h2 class="text-base font-body font-semibold tracking-tight mb-4">分类销售占比</h2>
-        <div v-if="store.categorySummary.length === 0"
-          class="flex-1 flex items-center justify-center text-sm text-on-surface-variant dark:text-gray-500">
-          暂无数据
-        </div>
-        <div v-else class="flex-1 min-h-0">
-          <VChart :option="pieOption" autoresize class="h-full w-full" :init-options="{ devicePixelRatio: dpr }" />
-        </div>
-      </n-card>
       <n-card style="flex:1" content-style="display:flex;flex-direction:column;flex:1;min-height:0;padding:24px">
         <h2 class="text-base font-body font-semibold tracking-tight mb-4">支付方式分布</h2>
         <div v-if="store.paymentBreakdown.length === 0"
@@ -457,41 +374,43 @@ const maxQty = computed(() => Math.max(...topProducts.value.map(p => p.qty), 1))
           <VChart :option="paymentOption" autoresize class="h-full w-full" :init-options="{ devicePixelRatio: dpr }" />
         </div>
       </n-card>
-    </div>
-
-    <!-- 热销商品排行 -->
-    <div class="flex flex-col">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-base font-body font-semibold tracking-tight">热销商品排行</h2>
-        <span
-          class="text-xs text-on-surface-variant dark:text-gray-400 font-body font-semibold tracking-wider uppercase">按销量</span>
-      </div>
-      <div class="grid grid-cols-2 gap-x-8 gap-y-3">
-        <div v-for="(p, i) in topProducts" :key="p.name" class="flex items-center gap-3">
-          <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-body font-bold shrink-0" :class="{
-            'bg-black dark:bg-white text-white dark:text-black': i < 3,
-            'bg-surface dark:bg-[#1a1a1a] text-on-surface-variant dark:text-gray-400': i >= 3
-          }">
-            {{ i + 1 }}
-          </span>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface truncate">{{
-                p.name }}</span>
-              <span class="text-xs font-body font-semibold ml-2 shrink-0">
-                {{ p.qty }} <span class="text-on-surface-variant dark:text-gray-400 font-normal">单</span>
-              </span>
-            </div>
-            <div class="h-2 rounded-full bg-surface dark:bg-[#1a1a1a] overflow-hidden">
-              <div class="h-full rounded-full transition-all duration-500"
-                :class="i === 0 ? 'bg-black dark:bg-white' : 'bg-black/20 dark:bg-white/20'"
-                :style="{ width: `${(p.qty / maxQty) * 100}%` }" />
-            </div>
-          </div>
-          <span class="text-xs text-on-surface-variant dark:text-gray-400 font-body shrink-0 w-14 text-right">¥{{
-            p.revenue.toLocaleString() }}</span>
+      <n-card style="flex:1" content-style="display:flex;flex-direction:column;flex:1;min-height:0;padding:24px">
+        <h2 class="text-base font-body font-semibold tracking-tight mb-4">热销商品排行
+          <span
+            class="text-xs text-on-surface-variant dark:text-gray-400 font-body font-semibold tracking-wider uppercase ml-2">按销量</span>
+        </h2>
+        <div v-if="topProducts.length === 0"
+          class="flex-1 flex items-center justify-center text-sm text-on-surface-variant dark:text-gray-500">
+          暂无数据
         </div>
-      </div>
+        <div v-else class="flex flex-col gap-3">
+          <div v-for="(p, i) in topProducts" :key="p.name" class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-body font-bold shrink-0"
+              :class="{
+                'bg-black dark:bg-white text-white dark:text-black': i < 3,
+                'bg-surface dark:bg-[#1a1a1a] text-on-surface-variant dark:text-gray-400': i >= 3
+              }">
+              {{ i + 1 }}
+            </span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface truncate">{{
+                  p.name }}</span>
+                <span class="text-xs font-body font-semibold ml-2 shrink-0">
+                  {{ p.qty }} <span class="text-on-surface-variant dark:text-gray-400 font-normal">单</span>
+                </span>
+              </div>
+              <div class="h-2 rounded-full bg-surface dark:bg-[#1a1a1a] overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500"
+                  :class="i === 0 ? 'bg-black dark:bg-white' : 'bg-black/20 dark:bg-white/20'"
+                  :style="{ width: `${(p.qty / maxQty) * 100}%` }"></div>
+              </div>
+            </div>
+            <span class="text-xs text-on-surface-variant dark:text-gray-400 font-body shrink-0 w-14 text-right">¥{{
+              p.revenue.toLocaleString() }}</span>
+          </div>
+        </div>
+      </n-card>
     </div>
   </div>
 </template>

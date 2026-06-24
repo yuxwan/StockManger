@@ -2,7 +2,7 @@ import axios from 'axios'
 import message from '../utils/message'
 
 const request = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'https://yuxwan.com/stock/api/',
   timeout: 15000
 })
 

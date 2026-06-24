@@ -205,13 +205,13 @@ onMounted(() => {
 
     <!-- 用户列表 -->
     <n-card size="small" :bordered="false" style="flex:1">
-      <n-data-table :bordered="false" :loading="loading" size="small"
+      <n-data-table :bordered="false" :loading="loading" size="small" scroll-x="850"
         :columns="[
-          { title: 'ID', key: 'id' },
-          { title: '用户名', key: 'username' },
-          { title: '昵称', key: 'nickname' },
+          { title: 'ID', key: 'id', minWidth: 60 },
+          { title: '用户名', key: 'username', minWidth: 120 },
+          { title: '昵称', key: 'nickname', minWidth: 120 },
           {
-            title: '状态', key: 'status',
+            title: '状态', key: 'status', minWidth: 60,
             render(row) {
               return h('span', {
                 class: row.status === 1
@@ -221,11 +221,11 @@ onMounted(() => {
             }
           },
           {
-            title: '创建时间', key: 'createTime',
+            title: '创建时间', key: 'createTime', minWidth: 160,
             render(row) { return row.createTime || '-' }
           },
           {
-            title: '操作', key: 'actions', width: 230,
+            title: '操作', key: 'actions', width: 230, fixed: 'right',
             render(row) {
               return h('div', { class: 'inline-flex items-center gap-0.5' }, [
                 h('button', {
