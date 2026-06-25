@@ -1,11 +1,9 @@
-# 服务器配置
 server:
   port: 8080
   tomcat:
     max-threads: 200
     min-spare-threads: 20
 
-# Spring 框架配置
 spring:
   servlet:
     multipart:
@@ -13,9 +11,9 @@ spring:
       max-request-size: 10MB
 
   datasource:
-    url: jdbc:mysql://192.168.5.4:3306/stock?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useServerPrepStmts=true&cachePrepStmts=true&prepStmtCacheSize=256&prepStmtCacheSqlLimit=2048
-    username: stock
-    password: K7#mP9$vQ2@xL5!n
+    url: jdbc:mysql://localhost:3306/stock?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: your_password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimum-idle: 5
@@ -27,7 +25,7 @@ spring:
 
   data:
     redis:
-      host: 192.168.5.4
+      host: localhost
       port: 6379
       timeout: 6000ms
       lettuce:
@@ -42,7 +40,6 @@ spring:
     time-zone: GMT+8
     default-property-inclusion: non_null
 
-# Sa-Token 认证配置
 sa-token:
   token-name: Authorization
   timeout: -1
@@ -50,24 +47,15 @@ sa-token:
   is-concurrent: true
   token-style: uuid
 
-# 微信小程序配置
 wx:
   miniapp:
-    appid: wxb6abc5d08097c175
-    secret: 4abc863864f19d83d2270583af97c947
+    appid: your_appid
+    secret: your_secret
 
-# 静态资源配置
 static:
   resource:
-    url: https://yuxwan.com/static/
+    url: https://your-domain.com/static/
 
-# 应用自定义配置
-app:
-  trial:
-    enabled: true
-    nickname: 试用用户
-
-# 日志配置
 logging:
   level:
     com.luckyun.stock: debug

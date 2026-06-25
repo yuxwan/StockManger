@@ -10,14 +10,6 @@ let mainWindow
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
 
-if (!isDev) {
-  // 配置更新服务器地址
-  // autoUpdater.setFeedURL({
-  //   provider: 'generic',
-  //   url: 'https://yuxwan.com/download/stock/'
-  // })
-}
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1366,
