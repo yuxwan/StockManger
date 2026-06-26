@@ -179,10 +179,8 @@ async function submit() {
       }
     }
     router.push('/products')
-  } catch (err) {
+  } catch {
     submitting.value = false
-    const msg = err?.response?.data?.msg || err?.message || '操作失败'
-    message.error(msg)
   }
 }
 </script>

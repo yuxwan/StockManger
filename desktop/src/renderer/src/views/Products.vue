@@ -67,7 +67,7 @@ async function confirmStockAdjust() {
     stockDialogShow.value = false
     await fetchProducts()
   } catch {
-    message.error('库存调整失败')
+    stockDialogShow.value = false
   }
 }
 
@@ -78,7 +78,6 @@ function handleDelete(product) {
       message.success('商品已删除')
       await fetchProducts()
     } catch {
-      message.error('删除失败')
     }
   })
 }
@@ -276,7 +275,7 @@ function doPrint() {
     <div class="flex-1 flex flex-col gap-6">
       <!-- 统计卡片 -->
       <div class="flex gap-4">
-        <n-card size="small" :bordered="false" style="flex:1">
+        <n-card style="flex:1">
           <div class="flex items-center gap-4">
             <div class="w-11 h-11 rounded-xl bg-black/10 dark:bg-white/10 flex items-center justify-center shrink-0">
               <Icon icon="mdi:package-variant-closed" width="20" class="text-on-surface dark:text-inverse-on-surface" />
@@ -287,7 +286,7 @@ function doPrint() {
             </div>
           </div>
         </n-card>
-        <n-card size="small" :bordered="false" style="flex:1">
+        <n-card  style="flex:1">
           <div class="flex items-center gap-4">
             <div class="w-11 h-11 rounded-xl bg-red-100 dark:bg-red-950/30 flex items-center justify-center shrink-0">
               <Icon icon="mdi:alert-circle-outline" width="20" class="text-red-600 dark:text-red-400" />
@@ -298,7 +297,7 @@ function doPrint() {
             </div>
           </div>
         </n-card>
-        <n-card v-if="!isCashier" size="small" :bordered="false" style="flex:1">
+        <n-card v-if="!isCashier"  style="flex:1">
           <div class="flex items-center gap-4">
             <div class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
               <Icon icon="mdi:currency-cny" width="20" class="text-emerald-600 dark:text-emerald-400" />
@@ -312,7 +311,7 @@ function doPrint() {
       </div>
 
       <!-- 商品列表 -->
-      <n-card size="small" :bordered="false" style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
+      <n-card  style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
         <template #header>
           <div class="flex items-center justify-between">
             <span class="text-sm font-body font-semibold uppercase tracking-wider text-on-surface-variant">商品清单</span>

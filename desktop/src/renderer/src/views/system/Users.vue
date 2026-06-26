@@ -125,8 +125,7 @@ async function handleSubmit() {
     }
     modalShow.value = false
     await fetchUsers()
-  } catch (e) {
-    message.error(e.response?.data?.msg || '操作失败')
+  } catch {
   }
 }
 
@@ -137,7 +136,6 @@ function handleDelete(id) {
       message.success('用户已删除')
       await fetchUsers()
     } catch {
-      message.error('删除失败')
     }
   })
 }
@@ -149,7 +147,6 @@ async function toggleStatus(user) {
     user.status = newStatus
     message.success(newStatus === 1 ? '用户已启用' : '用户已禁用')
   } catch {
-    message.error('操作失败')
   }
 }
 
@@ -172,7 +169,6 @@ async function saveRoleAssign() {
     roleModalShow.value = false
     await fetchUsers()
   } catch {
-    message.error('分配失败')
   }
 }
 
@@ -204,7 +200,7 @@ onMounted(() => {
     </div>
 
     <!-- 用户列表 -->
-    <n-card size="small" :bordered="false" style="flex:1">
+    <n-card  style="flex:1">
       <n-data-table :bordered="false" :loading="loading" size="small" scroll-x="850"
         :columns="[
           { title: 'ID', key: 'id', minWidth: 60 },

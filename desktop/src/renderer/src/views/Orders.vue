@@ -72,7 +72,6 @@ async function onRefundItemConfirm() {
     detailOrder.value = data.order
     await fetchOrders()
   } catch {
-    message.error('退款失败')
   } finally {
     refundItemShow.value = false
   }
@@ -85,7 +84,6 @@ function handleRefund(order) {
       message.success('订单已退款')
       await fetchOrders()
     } catch {
-      message.error('退款失败')
     }
   }, '确定退款')
 }
@@ -97,7 +95,6 @@ function handleDelete(order) {
       message.success('订单已删除')
       await fetchOrders()
     } catch {
-      message.error('删除失败')
     }
   }, '确定删除')
 }
@@ -212,7 +209,7 @@ const totalRevenue = computed(() =>
     </div>
 
     <!-- 订单列表 -->
-    <n-card size="small" :bordered="false" style="flex:1;display:flex;flex-direction:column"
+    <n-card  style="flex:1;display:flex;flex-direction:column"
       content-style="flex:1;display:flex;flex-direction:column">
       <div v-if="loading" class="flex-1 flex items-center justify-center">
         <Icon icon="mdi:loading" width="24" class="animate-spin text-on-surface-variant dark:text-gray-400" />

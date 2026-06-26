@@ -7,7 +7,12 @@ import { menuApi } from '../api'
 const route = useRoute()
 const router = useRouter()
 const isMaximized = ref(false)
-const isDark = ref(false)
+let savedTheme = false
+try {
+  const saved = localStorage.getItem('theme')
+  if (saved) savedTheme = saved === 'dark'
+} catch {}
+const isDark = ref(savedTheme || document.documentElement.classList.contains('dark'))
 const sidebarCollapsed = ref(true)
 const refreshTick = ref(0)
 
@@ -57,6 +62,9 @@ function handleMenuUpdate(key) {
 function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle('dark', isDark.value)
+  try {
+    localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  } catch {}
 }
 
 async function checkMaximized() {

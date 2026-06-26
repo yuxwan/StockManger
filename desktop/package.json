@@ -1,7 +1,7 @@
 {
   "name": "desktop-app",
-  "version": "1.0.1",
-  "description": "Electron + Vue3 desktop app",
+  "version": "1.0.13",
+  "description": "Stock",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -49,6 +49,9 @@
     ]
   },
   "dependencies": {
+    "@iconify-json/logos": "^1.2.11",
+    "@iconify-json/mdi": "^1.2.3",
+    "@iconify-json/simple-icons": "^1.2.87",
     "@iconify/vue": "^4.3.0",
     "@vuepic/vue-datepicker": "^14.0.0",
     "axios": "^1.18.1",

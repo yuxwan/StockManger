@@ -84,6 +84,14 @@
               </div>
             </div>
 
+            <!-- 下载完成提示 -->
+            <div v-if="status === 'downloaded' && updateInfo?.savedPath" class="mb-4">
+              <div class="rounded bg-emerald-50 dark:bg-emerald-950/20 p-3">
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mb-1">安装包已保存到下载目录</p>
+                <p class="text-xs text-on-surface-variant dark:text-gray-400 font-mono truncate">{{ updateInfo.savedPath }}</p>
+              </div>
+            </div>
+
             <!-- 错误信息 -->
             <div v-if="status === 'error' && errorMsg" class="mb-4">
               <div class="rounded bg-red-50 dark:bg-red-950/20 p-3">
@@ -95,7 +103,7 @@
           <!-- 底部按钮 -->
           <div class="flex items-center justify-end gap-2 px-6 pb-6">
             <button
-              v-if="status === 'available' || status === 'error'"
+              v-if="status === 'available' || status === 'error' || status === 'downloaded'"
               class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
               @click="onClose"
             >
@@ -116,6 +124,7 @@
               <Icon icon="mdi:download" width="14" />
               立即下载
             </button>
+            
             <button
               v-if="status === 'downloaded'"
               class="h-9 px-5 rounded text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex items-center gap-2"

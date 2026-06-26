@@ -36,9 +36,9 @@ public class MenuController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Menu> get(@PathVariable Long id) {
+    public ResponseEntity<?> get(@PathVariable Long id) {
         Menu menu = menuService.getById(id);
-        if (menu == null) return ResponseEntity.notFound().build();
+        if (menu == null) return ResponseEntity.badRequest().body(Map.of("msg", "菜单不存在"));
         return ResponseEntity.ok(menu);
     }
 

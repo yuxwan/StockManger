@@ -12,6 +12,13 @@ const loading = ref(false)
 const isMaximized = ref(false)
 const electronAPI = window.electronAPI || { minimize: () => { }, maximize: () => { }, close: () => { }, isMaximized: () => { } }
 
+function toggleDark() {
+  const isDark = document.documentElement.classList.toggle('dark')
+  try {
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+  } catch {}
+}
+
 async function login() {
   if (!username.value) {
     message.warning('请输入账号')
@@ -26,6 +33,8 @@ async function login() {
     const res = await authApi.login({ username: username.value, password: password.value })
     localStorage.setItem('token', res.token)
     if (res.role) localStorage.setItem('userRole', res.role)
+    if (res.username) localStorage.setItem('userName', res.username)
+    if (res.nickname) localStorage.setItem('userNickname', res.nickname)
     router.push('/checkout')
   } catch {
     // 错误已在拦截器中处理
@@ -48,6 +57,11 @@ onMounted(async () => {
     <div class="fixed top-0 left-0 right-0 h-8 z-40" style="-webkit-app-region: drag"></div>
     <!-- 窗口控制按钮 -->
     <div class="flex items-center gap-1 fixed top-1 right-2 z-50" style="-webkit-app-region: no-drag">
+      <button class="w-9 h-[28px] flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10"
+        title="切换深色模式" @click="toggleDark">
+        <Icon icon="mdi:weather-night" width="16" class="text-on-surface dark:text-inverse-on-surface" />
+      </button>
+      <div class="w-px h-4 bg-outline-variant/40 dark:bg-[#444] mx-0.5"></div>
       <button class="w-11 h-[28px] flex items-center justify-center rounded-md hover:bg-black/10 dark:hover:bg-white/10"
         title="最小化" @click="electronAPI.minimize">
         <Icon icon="mdi:window-minimize" width="14" class="text-on-surface dark:text-inverse-on-surface" />
@@ -66,17 +80,15 @@ onMounted(async () => {
 
     <div class="flex-1 flex bg-surface dark:bg-[#1a1a1a]">
       <!-- 左侧品牌区 -->
-      <div class="hidden lg:flex flex-1 flex-col items-center justify-center bg-black dark:bg-white">
-        <Icon icon="logos:electron" width="64" height="64" class="opacity-60 dark:opacity-80" />
-        <h1 class="text-3xl font-body font-bold text-white dark:text-black mt-6 tracking-tight">STOCK</h1>
-        <!-- <p class="text-sm text-white/60 dark:text-black/50 font-body mt-2">收银管理系统</p> -->
+      <div class="hidden lg:flex flex-1 flex-col items-center justify-center">
+        <img src="/logo.png" alt="logo" class="w-24 h-24 object-contain drop-shadow-center dark:drop-shadow-center-dark" />
       </div>
 
       <!-- 右侧登录区 -->
       <div class="flex-1 flex items-center justify-center p-8">
         <div class="w-full max-w-sm">
           <div class="lg:hidden flex items-center gap-3 mb-10">
-            <Icon icon="logos:electron" width="32" height="32" />
+            <img src="/logo.png" alt="logo" class="w-8 h-8 object-contain" />
             <span class="text-lg font-body font-bold tracking-tight">STOCK</span>
           </div>
 

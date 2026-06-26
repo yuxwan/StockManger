@@ -5,7 +5,7 @@
       <p class="text-sm text-on-surface-variant dark:text-gray-400 font-body mt-1">商品新增、编辑、入库、出库等操作记录</p>
     </div>
 
-    <n-card size="small" :bordered="false" style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
+    <n-card  style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
       <div v-if="loading" class="flex-1 flex items-center justify-center">
         <Icon icon="mdi:loading" width="24" class="animate-spin text-on-surface-variant dark:text-gray-400" />
       </div>

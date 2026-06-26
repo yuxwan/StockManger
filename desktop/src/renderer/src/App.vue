@@ -18,7 +18,17 @@ import { darkTheme } from 'naive-ui'
 import LoadingBarInit from './components/LoadingBarInit.vue'
 import UpdateDialog from './components/UpdateDialog.vue'
 
-const isDark = ref(document.documentElement.classList.contains('dark'))
+let savedTheme = false
+try {
+  const saved = localStorage.getItem('theme')
+  console.log('App.vue init - theme from localStorage:', saved)
+  if (saved) savedTheme = saved === 'dark'
+} catch (e) {
+  console.error('App.vue init - localStorage error:', e)
+}
+const isDark = ref(savedTheme || document.documentElement.classList.contains('dark'))
+console.log('App.vue init - isDark:', isDark.value)
+
 let observer
 
 onMounted(() => {
@@ -188,6 +198,14 @@ const themeOverrides = computed(() => ({
 .n-card-header__close:hover svg * {
   color: inherit !important;
   fill: inherit !important;
+}
+
+/* ── Naive UI Card 阴影 ── */
+.n-card {
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.12) !important;
+}
+.dark .n-card {
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.35) !important;
 }
 
 

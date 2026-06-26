@@ -160,8 +160,7 @@ async function handleSubmit() {
     modalShow.value = false
     await fetchMenus()
     await fetchFlatMenus()
-  } catch (e) {
-    message.error(e.response?.data?.msg || '操作失败')
+  } catch {
   }
 }
 
@@ -173,7 +172,6 @@ function handleDelete(id) {
       await fetchMenus()
       await fetchFlatMenus()
     } catch {
-      message.error('删除失败')
     }
   })
 }
@@ -215,7 +213,7 @@ function renderMenuSuffix({ option }) {
     </div>
 
     <!-- 菜单树 -->
-    <n-card size="small" :bordered="false" style="flex:1">
+    <n-card  style="flex:1">
       <div v-if="loading" class="flex items-center justify-center py-12">
         <Icon icon="mdi:loading" width="24" class="animate-spin text-on-surface-variant dark:text-gray-400" />
       </div>

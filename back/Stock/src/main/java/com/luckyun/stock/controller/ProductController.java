@@ -41,9 +41,10 @@ public class ProductController {
     }
 
     @GetMapping("/barcode/{barcode}")
-    public ResponseEntity<Product> getByBarcode(@PathVariable String barcode) {
+    public ResponseEntity<?> getByBarcode(@PathVariable String barcode) {
         Product product = productService.lambdaQuery()
                 .eq(Product::getBarcode, barcode).one();
+        if (product == null) return ResponseEntity.badRequest().body(Map.of("msg", "商品不存在"));
         return ResponseEntity.ok(product);
     }
 
@@ -103,13 +104,13 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/stock")
-    public ResponseEntity<Product> adjustStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+    public ResponseEntity<?> adjustStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
         int delta = body.get("delta");
-        if (delta == 0) return ResponseEntity.badRequest().build();
+        if (delta == 0) return ResponseEntity.badRequest().body(Map.of("msg", "调整数量不能为0"));
         Product product = productService.getById(id);
-        if (product == null) return ResponseEntity.notFound().build();
+        if (product == null) return ResponseEntity.badRequest().body(Map.of("msg", "商品不存在"));
         int newStock = product.getStock() + delta;
-        if (newStock < 0) return ResponseEntity.badRequest().build();
+        if (newStock < 0) return ResponseEntity.badRequest().body(Map.of("msg", "库存不足"));
         String logType = delta > 0 ? "STOCK_IN" : "STOCK_OUT";
         String action = delta > 0 ? "入库" : "出库";
         int qty = Math.abs(delta);

@@ -36,7 +36,7 @@ public class SystemUserController {
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id) {
         User user = userService.getById(id);
-        if (user == null) return ResponseEntity.notFound().build();
+        if (user == null) return ResponseEntity.badRequest().body(Map.of("msg", "用户不存在"));
         user.setPassword(null);
         // 返回用户的角色ID列表
         List<Long> roleIds = roleService.getUserRoles(id).stream()
@@ -71,7 +71,7 @@ public class SystemUserController {
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserCreateDTO dto) {
         User user = userService.getById(id);
-        if (user == null) return ResponseEntity.notFound().build();
+        if (user == null) return ResponseEntity.badRequest().body(Map.of("msg", "用户不存在"));
 
         if (dto.getUsername() != null && !dto.getUsername().equals(user.getUsername())) {
             User exist = userService.lambdaQuery().eq(User::getUsername, dto.getUsername())
@@ -105,7 +105,7 @@ public class SystemUserController {
     @PutMapping("/{id}/status")
     public ResponseEntity<?> toggleStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
         User user = userService.getById(id);
-        if (user == null) return ResponseEntity.notFound().build();
+        if (user == null) return ResponseEntity.badRequest().body(Map.of("msg", "用户不存在"));
         user.setStatus(body.get("status"));
         userService.updateById(user);
         return ResponseEntity.ok(Map.of("msg", "状态已更新"));

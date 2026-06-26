@@ -110,8 +110,7 @@ async function handleSubmit() {
     }
     modalShow.value = false
     await fetchRoles()
-  } catch (e) {
-    message.error(e.response?.data?.msg || '操作失败')
+  } catch {
   }
 }
 
@@ -122,7 +121,6 @@ function handleDelete(id) {
       message.success('角色已删除')
       await fetchRoles()
     } catch {
-      message.error('删除失败')
     }
   })
 }
@@ -147,7 +145,7 @@ onMounted(() => {
     </div>
 
     <!-- 角色列表 -->
-    <n-card size="small" :bordered="false" style="flex:1">
+    <n-card  style="flex:1">
       <n-data-table :bordered="false" :loading="loading" size="small" scroll-x="800"
         :columns="[
           { title: 'ID', key: 'id', minWidth: 60 },

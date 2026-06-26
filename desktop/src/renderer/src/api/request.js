@@ -6,7 +6,6 @@ const request = axios.create({
   timeout: 15000
 })
 
-// 请求拦截器 — 自动带 token
 request.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -15,7 +14,6 @@ request.interceptors.request.use(config => {
   return config
 })
 
-// 响应拦截器 — 统一错误处理
 request.interceptors.response.use(
   res => res.data,
   err => {
@@ -23,9 +21,14 @@ request.interceptors.response.use(
       message.error('请求超时，请检查网络连接')
     } else if (err.response?.status === 401) {
       localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      localStorage.removeItem('userName')
+      localStorage.removeItem('userNickname')
+      localStorage.removeItem('userRole')
       message.error('登录已过期，请重新登录')
-      window.location.hash = '#/login'
+      setTimeout(() => {
+        window.location.hash = '#/login'
+        window.location.reload()
+      }, 1000)
     } else {
       const msg = err.response?.data?.msg || err.message || '请求失败'
       message.error(msg)

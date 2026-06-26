@@ -1,14 +1,50 @@
 import { app, BrowserWindow, shell, Menu, ipcMain } from 'electron'
 import { join } from 'path'
+import { copyFileSync, existsSync, mkdirSync } from 'fs'
 import { autoUpdater } from 'electron-updater'
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL
 
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+}
+
 let mainWindow
 
-// 自动更新配置
+app.setPath('userData', join(app.getPath('appData'), 'Stock'))
+app.setPath('cache', join(app.getPath('appData'), 'Stock', 'Cache'))
+
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
+
+function copyInstallerToDownloads(srcPath) {
+  try {
+    const exeDir = app.getPath('exe').replace(/[\\/][^\\/]+$/, '')
+    const destPath = join(exeDir, 'Stock-Setup.exe')
+    copyFileSync(srcPath, destPath)
+    return destPath
+  } catch (e) {
+    console.error('复制安装包失败:', e)
+    try {
+      const downloadsDir = app.getPath('downloads')
+      if (!existsSync(downloadsDir)) mkdirSync(downloadsDir, { recursive: true })
+      const destPath = join(downloadsDir, 'Stock-Setup.exe')
+      copyFileSync(srcPath, destPath)
+      return destPath
+    } catch (e2) {
+      console.error('复制安装包到下载目录也失败:', e2)
+      return ''
+    }
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -28,7 +64,6 @@ function createWindow() {
 
   if (isDev) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
-    // 开发模式下允许 F12 打开 DevTools
     mainWindow.webContents.on('before-input-event', (_, input) => {
       if (input.key === 'F12') {
         mainWindow.webContents.toggleDevTools()
@@ -44,10 +79,8 @@ function createWindow() {
   })
 }
 
-// ======= App 信息 IPC =======
 ipcMain.handle('app:getVersion', () => app.getVersion())
 
-// ======= 窗口控制 IPC =======
 ipcMain.handle('window:minimize', () => mainWindow?.minimize())
 ipcMain.handle('window:maximize', () => {
   if (mainWindow?.isMaximized()) {
@@ -61,7 +94,6 @@ ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized())
 
 let manualUpdateCheck = false
 
-// ======= 自动更新 IPC =======
 ipcMain.handle('update:check', () => {
   manualUpdateCheck = true
   autoUpdater.checkForUpdates()
@@ -75,7 +107,6 @@ ipcMain.handle('update:install', () => {
   autoUpdater.quitAndInstall(false, true)
 })
 
-// ======= AutoUpdater 事件 → 发送给渲染进程 =======
 function setupAutoUpdaterEvents() {
   autoUpdater.on('checking-for-update', () => {
     mainWindow?.webContents.send('update:checking', { manual: manualUpdateCheck })
@@ -96,7 +127,12 @@ function setupAutoUpdaterEvents() {
   })
 
   autoUpdater.on('update-downloaded', (info) => {
-    mainWindow?.webContents.send('update:downloaded', info)
+    const filePath = autoUpdater.downloadedFile || ''
+    let savedPath = ''
+    if (filePath) {
+      savedPath = copyInstallerToDownloads(filePath)
+    }
+    mainWindow?.webContents.send('update:downloaded', { ...info, savedPath })
   })
 
   autoUpdater.on('error', (err) => {
@@ -110,7 +146,6 @@ app.whenReady().then(() => {
   createWindow()
   setupAutoUpdaterEvents()
 
-  // 生产环境启动后自动检查更新（延迟 3 秒确保窗口已就绪）
   if (!isDev) {
     setTimeout(() => {
       autoUpdater.checkForUpdates()

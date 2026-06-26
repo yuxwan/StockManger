@@ -14,10 +14,11 @@ import Roles from '../views/system/Roles.vue'
 import Menus from '../views/system/Menus.vue'
 
 const routes = [
-  { path: '/login', name: 'login', component: Login },
+  { path: '/login', name: 'login', component: Login, meta: { requiresAuth: false } },
   {
     path: '/',
     component: MainLayout,
+    meta: { requiresAuth: true },
     children: [
       { path: '', redirect: '/checkout' },
       { path: 'checkout', name: 'checkout', component: Checkout },
@@ -41,10 +42,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
+  if (to.meta?.requiresAuth === false) return
   if (to.path === '/login') return
-  // 检查登录状态
-  if (!localStorage.getItem('token')) {
-    return '/login'
+  const token = localStorage.getItem('token')
+  if (!token) {
+    return { path: '/login', replace: true }
   }
   loadingBarRef.value?.start()
 })

@@ -3,16 +3,36 @@ package com.luckyun.stock.service.impl;
 import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.luckyun.stock.entity.Role;
 import com.luckyun.stock.entity.User;
 import com.luckyun.stock.mapper.UserMapper;
+import com.luckyun.stock.service.RoleService;
 import com.luckyun.stock.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private final RoleService roleService;
+
+    private String getUserRoleCode(Long userId) {
+        List<Role> roles = roleService.getUserRoles(userId);
+        if (roles != null && !roles.isEmpty()) {
+            for (Role role : roles) {
+                if ("admin".equals(role.getCode()) || "super_admin".equals(role.getCode())) {
+                    return "admin";
+                }
+            }
+            return roles.get(0).getCode();
+        }
+        return null;
+    }
 
     @Override
     public Map<String, Object> login(String username, String password) {
@@ -29,7 +49,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         StpUtil.login(user.getId());
         Map<String, Object> result = new HashMap<>();
         result.put("token", StpUtil.getTokenValue());
-        result.put("role", user.getRole());
+        String role = getUserRoleCode(user.getId());
+        result.put("role", role != null ? role : (user.getRole() != null ? user.getRole() : "cashier"));
+        result.put("username", user.getUsername());
+        result.put("nickname", user.getNickname());
         return result;
     }
 

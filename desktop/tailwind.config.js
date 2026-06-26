@@ -32,7 +32,7 @@ module.exports = {
       },
       dropShadow: {
         'center': '0 0 6px rgba(0,0,0,0.12)',
-        'center-dark': '0 0 6px rgba(0,0,0,0.35)'
+        'center-dark': '0 0 8px rgba(255,255,255,0.15)'
       },
       borderRadius: {
         sm: '0.5rem',

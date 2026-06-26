@@ -96,8 +96,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional(rollbackFor = Exception.class)
     public void refundOrder(Long id) {
         Order order = getById(id);
-        if (order == null) return;
-        if ("refunded".equals(order.getStatus())) return;
+        if (order == null) throw new RuntimeException("订单不存在");
+        if ("refunded".equals(order.getStatus())) throw new RuntimeException("订单已退款，请勿重复操作");
 
         // 恢复库存 & 标记单品已退
         List<OrderItem> items = orderItemMapper.selectList(
@@ -126,15 +126,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional(rollbackFor = Exception.class)
     public void refundOrderItem(Long orderId, Long itemId, Integer quantity) {
         Order order = getById(orderId);
-        if (order == null) return;
-        if ("refunded".equals(order.getStatus())) return; // 整单已退不能再单品退
+        if (order == null) throw new RuntimeException("订单不存在");
+        if ("refunded".equals(order.getStatus())) throw new RuntimeException("订单已全额退款，无法单品退款");
 
         OrderItem item = orderItemMapper.selectById(itemId);
-        if (item == null || !item.getOrderId().equals(orderId)) return;
+        if (item == null || !item.getOrderId().equals(orderId)) throw new RuntimeException("订单明细不存在");
 
         int refunded = item.getRefundedQty() != null ? item.getRefundedQty() : 0;
         int refundable = item.getQuantity() - refunded;
-        if (quantity <= 0 || quantity > refundable) return;
+        if (quantity <= 0 || quantity > refundable) throw new RuntimeException("退款数量不合法");
 
         // 恢复库存
         if (item.getProductId() != null) {
@@ -165,6 +165,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteOrder(Long id) {
+        Order order = getById(id);
+        if (order == null) throw new RuntimeException("订单不存在");
         // 先获取订单商品明细，恢复库存
         List<OrderItem> items = orderItemMapper.selectList(
                 new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id)

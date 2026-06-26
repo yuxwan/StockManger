@@ -10,6 +10,9 @@ const showPwdForm = ref(false)
 const submitting = ref(false)
 const pwdForm = ref({ oldPassword: '', newPassword: '', confirmPassword: '' })
 const appVersion = ref('')
+const userName = ref('')
+const userNickname = ref('')
+const userRole = ref('')
 
 onMounted(async () => {
   if (window.electronAPI?.getAppVersion) {
@@ -17,18 +20,30 @@ onMounted(async () => {
   } else {
     appVersion.value = '1.0.0'
   }
+  userName.value = localStorage.getItem('userName') || ''
+  userNickname.value = localStorage.getItem('userNickname') || ''
+  userRole.value = localStorage.getItem('userRole') || ''
 })
 
 function toggleDark() {
-  document.documentElement.classList.toggle('dark')
+  const isDark = document.documentElement.classList.toggle('dark')
+  console.log('toggleDark called, isDark:', isDark)
+  try {
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+    console.log('localStorage saved:', localStorage.getItem('theme'))
+  } catch (e) {
+    console.error('localStorage save error:', e)
+  }
 }
 
 async function logout() {
   try {
     await authApi.logout()
-  } catch {}
+  } catch { }
   localStorage.removeItem('token')
   localStorage.removeItem('userRole')
+  localStorage.removeItem('userName')
+  localStorage.removeItem('userNickname')
   router.push('/login')
 }
 
@@ -53,9 +68,7 @@ async function changePassword() {
     message.success('密码修改成功')
     showPwdForm.value = false
     pwdForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
-  } catch (err) {
-    const msg = err?.response?.data?.msg || '修改失败'
-    message.error(msg)
+  } catch {
   } finally {
     submitting.value = false
   }
@@ -66,92 +79,94 @@ async function changePassword() {
   <div class="max-w-lg mx-auto w-full flex flex-col gap-6">
     <h2 class="text-2xl font-body font-bold tracking-tight">设置</h2>
 
-    <div class="p-6 rounded-2xl bg-surface-container dark:bg-[#252525] drop-shadow-center dark:drop-shadow-center-dark flex flex-col gap-4">
-      <div class="flex items-center justify-between py-3">
-        <div>
-          <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">主题模式</div>
-          <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">切换亮色/暗色主题</div>
+    <n-card>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3 py-2">
+          <div class="w-12 h-12 rounded-full bg-black dark:bg-white flex items-center justify-center">
+            <Icon icon="mdi:account" width="24" class="text-white dark:text-black" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-base font-body font-semibold text-on-surface dark:text-inverse-on-surface truncate">
+              {{ userNickname || userName }}
+            </div>
+            <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5 truncate">
+              @{{ userName }} · {{ userRole === 'admin' ? '管理员' : userRole === 'cashier' ? '收银员' : userRole }}
+            </div>
+          </div>
         </div>
-        <button
-          class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black"
-          @click="toggleDark"
-        >切换</button>
       </div>
+    </n-card>
 
-      <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
-
-      <div class="flex items-center justify-between py-3">
-        <div>
-          <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">账号密码</div>
-          <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">修改登录密码</div>
+    <n-card>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between py-3">
+          <div>
+            <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">主题模式</div>
+            <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">切换亮色/暗色主题</div>
+          </div>
+          <button
+            class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black"
+            @click="toggleDark">切换</button>
         </div>
-        <button
-          class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black"
-          @click="showPwdForm = !showPwdForm"
-        >{{ showPwdForm ? '取消' : '修改' }}</button>
-      </div>
 
-      <template v-if="showPwdForm">
         <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
 
-        <div class="flex flex-col gap-3 pt-2">
-          <input
-            v-model="pwdForm.oldPassword"
-            type="password"
-            placeholder="原密码"
-            class="px-3 py-2 rounded-lg text-sm bg-surface dark:bg-[#1a1a1a] text-on-surface dark:text-inverse-on-surface border border-outline-variant/50 dark:border-[#444] outline-none"
-          />
-          <input
-            v-model="pwdForm.newPassword"
-            type="password"
-            placeholder="新密码（至少6位）"
-            class="px-3 py-2 rounded-lg text-sm bg-surface dark:bg-[#1a1a1a] text-on-surface dark:text-inverse-on-surface border border-outline-variant/50 dark:border-[#444] outline-none"
-          />
-          <input
-            v-model="pwdForm.confirmPassword"
-            type="password"
-            placeholder="确认新密码"
-            class="px-3 py-2 rounded-lg text-sm bg-surface dark:bg-[#1a1a1a] text-on-surface dark:text-inverse-on-surface border border-outline-variant/50 dark:border-[#444] outline-none"
-          />
+        <div class="flex items-center justify-between py-3">
+          <div>
+            <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">账号密码</div>
+            <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">修改登录密码</div>
+          </div>
           <button
-            class="w-full py-2.5 rounded-lg text-sm font-body font-semibold bg-black dark:bg-white text-white dark:text-black hover:opacity-80 disabled:opacity-40 flex items-center justify-center gap-2"
-            :disabled="submitting"
-            @click="changePassword"
-          >
-            <Icon v-if="submitting" icon="mdi:loading" width="16" class="animate-spin" />
-            {{ submitting ? '修改中...' : '确认修改' }}
-          </button>
+            class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black"
+            @click="showPwdForm = !showPwdForm">{{ showPwdForm ? '取消' : '修改' }}</button>
         </div>
-      </template>
 
-      <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
+        <template v-if="showPwdForm">
+          <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
 
-      <div class="flex items-center justify-between py-3">
-        <div>
-          <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">版本</div>
-          <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">当前版本号</div>
+          <div class="flex flex-col gap-3 pt-2">
+            <input v-model="pwdForm.oldPassword" type="password" placeholder="原密码"
+              class="px-3 py-2 rounded-lg text-sm bg-surface dark:bg-[#1a1a1a] text-on-surface dark:text-inverse-on-surface border border-outline-variant/50 dark:border-[#444] outline-none" />
+            <input v-model="pwdForm.newPassword" type="password" placeholder="新密码（至少6位）"
+              class="px-3 py-2 rounded-lg text-sm bg-surface dark:bg-[#1a1a1a] text-on-surface dark:text-inverse-on-surface border border-outline-variant/50 dark:border-[#444] outline-none" />
+            <input v-model="pwdForm.confirmPassword" type="password" placeholder="确认新密码"
+              class="px-3 py-2 rounded-lg text-sm bg-surface dark:bg-[#1a1a1a] text-on-surface dark:text-inverse-on-surface border border-outline-variant/50 dark:border-[#444] outline-none" />
+            <button
+              class="w-full py-2.5 rounded-lg text-sm font-body font-semibold bg-black dark:bg-white text-white dark:text-black hover:opacity-80 disabled:opacity-40 flex items-center justify-center gap-2"
+              :disabled="submitting" @click="changePassword">
+              <Icon v-if="submitting" icon="mdi:loading" width="16" class="animate-spin" />
+              {{ submitting ? '修改中...' : '确认修改' }}
+            </button>
+          </div>
+        </template>
+
+        <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
+
+        <div class="flex items-center justify-between py-3">
+          <div>
+            <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">版本</div>
+            <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">当前版本号</div>
+          </div>
+          <span class="text-xs text-on-surface-variant dark:text-gray-500 font-mono">v{{ appVersion }}</span>
         </div>
-        <span class="text-xs text-on-surface-variant dark:text-gray-500 font-mono">v{{ appVersion }}</span>
+
+        <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
+
+        <div class="flex items-center justify-between py-3">
+          <div>
+            <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">检查更新</div>
+            <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">检查是否有新版本可用</div>
+          </div>
+          <button
+            class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black hover:opacity-80"
+            @click="checkForUpdates">检查</button>
+        </div>
       </div>
-
-      <div class="border-t border-outline-variant/50 dark:border-[#333]"></div>
-
-      <div class="flex items-center justify-between py-3">
-        <div>
-          <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface">检查更新</div>
-          <div class="text-xs text-on-surface-variant dark:text-gray-400 font-body mt-0.5">检查是否有新版本可用</div>
-        </div>
-        <button
-          class="px-4 py-2 rounded-lg text-xs font-body font-semibold bg-black dark:bg-white text-white dark:text-black hover:opacity-80"
-          @click="checkForUpdates"
-        >检查</button>
-      </div>
-    </div>
+    </n-card>
 
     <button
       class="flex items-center justify-center gap-2 py-3.5 rounded-xl border border-red-200 dark:border-red-900 text-sm font-body font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-      @click="logout"
-    >
+      @click="logout">
       <Icon icon="mdi:logout" width="18" />
       退出登录
     </button>
