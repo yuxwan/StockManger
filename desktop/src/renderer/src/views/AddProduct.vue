@@ -80,9 +80,10 @@ function generateBarcode() {
   form.value.barcode = ts + rand
 }
 
-// 条码输入后自动查询商品信息
+// 条码输入后自动查询商品信息（仅编辑模式：新增商品尚未保存，查询必然返回"商品不存在"）
 let barcodeTimer = null
 watch(() => form.value.barcode, (val) => {
+  if (!isEdit.value) return
   clearTimeout(barcodeTimer)
   if (!val || val.length < 4) return
   barcodeTimer = setTimeout(async () => {

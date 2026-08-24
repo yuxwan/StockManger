@@ -3,6 +3,7 @@ package com.luckyun.stock.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.secure.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luckyun.stock.dto.UserCreateDTO;
 import com.luckyun.stock.entity.User;
 import com.luckyun.stock.service.RoleService;
@@ -10,6 +11,7 @@ import com.luckyun.stock.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,22 @@ public class SystemUserController {
 
     private final UserService userService;
     private final RoleService roleService;
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<User>> search(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "20") int pageSize) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(User::getUsername, keyword)
+                    .or().like(User::getNickname, keyword);
+        }
+        wrapper.orderByDesc(User::getId);
+        Page<User> result = userService.page(new Page<>(page, pageSize), wrapper);
+        result.getRecords().forEach(u -> u.setPassword(null));
+        return ResponseEntity.ok(result);
+    }
 
     @GetMapping
     public ResponseEntity<List<User>> list() {

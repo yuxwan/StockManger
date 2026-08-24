@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, h, onMounted } from 'vue'
+import { ref, reactive, h, onMounted, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { systemUserApi, roleApi } from '../../api'
@@ -8,9 +8,11 @@ import ConfirmDialog from '../../components/ConfirmDialog.vue'
 const message = useMessage()
 
 const users = ref([])
+const total = ref(0)
 const roles = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
+let searchTimer = null
 
 // ── 弹窗 ──
 const modalShow = ref(false)
@@ -50,7 +52,9 @@ function onConfirmOk() {
 async function fetchUsers() {
   loading.value = true
   try {
-    users.value = await systemUserApi.list()
+    const res = await systemUserApi.search(searchQuery.value.trim(), pagination.page, pagination.pageSize)
+    users.value = res.records
+    total.value = res.total
   } catch { }
   loading.value = false
 }
@@ -61,14 +65,20 @@ async function fetchRoles() {
   } catch { }
 }
 
-const filteredUsers = computed(() => {
-  if (!searchQuery.value) return users.value
-  const q = searchQuery.value.toLowerCase()
-  return users.value.filter(u =>
-    u.username?.toLowerCase().includes(q) ||
-    u.nickname?.toLowerCase().includes(q)
-  )
+function onSearchInput() {
+  clearTimeout(searchTimer)
+  pagination.page = 1
+  searchTimer = setTimeout(fetchUsers, 300)
+}
+
+// ── 分页与搜索 ──
+const pagination = reactive({
+  page: 1,
+  pageSize: 10,
+  pageSizes: [5, 10, 20, 50]
 })
+
+watch(() => [pagination.page, pagination.pageSize], fetchUsers)
 
 function openCreate() {
   modalMode.value = 'create'
@@ -191,7 +201,7 @@ onMounted(() => {
           <Icon icon="mdi:magnify" width="16"
             class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 dark:text-gray-500" />
           <input v-model="searchQuery" type="text" placeholder="搜索用户名..."
-            class="w-52 h-9 pl-9 pr-3 rounded-xl bg-surface dark:bg-[#1a1a1a] text-sm text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant/40 dark:placeholder:text-gray-600 font-body" />
+            class="w-52 h-9 pl-9 pr-3 rounded-xl bg-surface dark:bg-[#1a1a1a] text-sm text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant/40 dark:placeholder:text-gray-600 font-body" @input="onSearchInput" />
         </div>
         <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex items-center gap-1.5" @click="openCreate">
           <Icon icon="mdi:plus" width="16" /> 新增用户
@@ -245,8 +255,17 @@ onMounted(() => {
               ])
             }
           }
-        ]" :data="filteredUsers" />
+        ]" :data="users" />
     </n-card>
+
+    <div v-if="total > 0" class="flex justify-end pt-2">
+      <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize"
+        :item-count="total" :page-sizes="pagination.pageSizes" show-size-picker>
+        <template #prefix>
+          <span class="text-xs text-on-surface-variant">共 {{ total }} 条</span>
+        </template>
+      </n-pagination>
+    </div>
 
     <!-- 新增/编辑弹窗 -->
     <ConfirmDialog v-model:show="modalShow" :title="modalMode === 'create' ? '新增用户' : '编辑用户'" width="480px" :hide-default-footer="true">

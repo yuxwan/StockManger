@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import message from '../utils/message'
 import { productApi, orderApi } from '../api'
@@ -7,6 +7,8 @@ import { productApi, orderApi } from '../api'
 const products = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
+const searchLoading = ref(false)
+let searchTimer = null
 const cart = ref({})
 const payment = ref('wechat')
 
@@ -18,7 +20,68 @@ async function fetchProducts() {
   }
 }
 
-onMounted(fetchProducts)
+async function searchProducts(keyword) {
+  searchLoading.value = true
+  try {
+    const res = await productApi.search(keyword, 1, 50)
+    products.value = res.records
+  } catch {
+    // 错误已在拦截器处理
+  } finally {
+    searchLoading.value = false
+  }
+}
+
+function onSearchInput(val) {
+  clearTimeout(searchTimer)
+  if (!val.trim()) {
+    fetchProducts()
+    return
+  }
+  searchTimer = setTimeout(() => searchProducts(val.trim()), 300)
+}
+
+onMounted(async () => {
+  window.addEventListener('barcode-scanned', handleBarcodeEvent)
+
+  await fetchProducts()
+
+  // 处理从其他页面扫码跳转
+  const pendingBarcode = sessionStorage.getItem('pendingBarcode')
+  if (pendingBarcode) {
+    sessionStorage.removeItem('pendingBarcode')
+    addProductByBarcode(pendingBarcode)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('barcode-scanned', handleBarcodeEvent)
+})
+
+function handleBarcodeEvent(e) {
+  addProductByBarcode(e.detail)
+}
+
+async function addProductByBarcode(code) {
+  if (!code) return
+  try {
+    const existing = products.value.find(p => p.barcode === code)
+    if (existing) {
+      addToCart(existing)
+      message.success(`已扫描：${existing.name}`)
+      return
+    }
+    const product = await productApi.getByBarcode(code)
+    if (product) {
+      addToCart(product)
+      products.value.unshift(product)
+      message.success(`已扫描：${product.name}`)
+    }
+  } catch {
+    // 错误已在拦截器处理
+  }
+}
+
 
 function addToCart(product) {
   if (!cart.value[product.id]) {
@@ -66,10 +129,6 @@ async function submitOrder() {
   }
 }
 
-const filteredProducts = computed(() =>
-  products.value.filter(p => p.name.includes(searchQuery.value))
-)
-
 const cartItems = computed(() => Object.values(cart.value))
 
 const totalCount = computed(() => cartItems.value.reduce((s, i) => s + i.qty, 0))
@@ -98,13 +157,13 @@ const total = computed(() => {
             <span>已选 {{ totalCount }} 件</span>
           </div>
         </div>
-        <n-input v-model:value="searchQuery" placeholder="搜索商品..." clearable>
+        <n-input v-model:value="searchQuery" placeholder="搜索商品..." clearable @update:value="onSearchInput">
           <template #prefix>
             <Icon icon="mdi:magnify" class="text-on-surface-variant/40 dark:text-gray-500" />
           </template>
         </n-input>
         <div class="flex flex-wrap gap-2 flex-1 overflow-auto min-h-0 pr-1 content-start">
-          <button v-for="p in filteredProducts" :key="p.id"
+          <button v-for="p in products" :key="p.id"
             class="flex items-center justify-between p-3 rounded-lg bg-surface dark:bg-[#1a1a1a] hover:bg-black/5 dark:hover:bg-white/5"
             @click="addToCart(p)">
             <span

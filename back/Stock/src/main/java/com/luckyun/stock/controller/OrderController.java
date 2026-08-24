@@ -2,12 +2,15 @@ package com.luckyun.stock.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luckyun.stock.dto.OrderCreateDTO;
 import com.luckyun.stock.entity.Order;
 import com.luckyun.stock.entity.OrderItem;
 import com.luckyun.stock.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,6 +24,19 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<Order>> search(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "20") int pageSize) {
+        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(Order::getOrderNo, keyword);
+        }
+        wrapper.orderByDesc(Order::getCreateTime);
+        return ResponseEntity.ok(orderService.page(new Page<>(page, pageSize), wrapper));
+    }
 
     @GetMapping
     public ResponseEntity<List<Order>> list() {

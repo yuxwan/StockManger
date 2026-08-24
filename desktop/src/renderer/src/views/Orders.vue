@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, h, onMounted } from 'vue'
+import { ref, reactive, computed, h, onMounted, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { orderApi } from '../api'
@@ -8,8 +8,10 @@ import ConfirmDialog from '../components/ConfirmDialog.vue'
 const message = useMessage()
 
 const orders = ref([])
+const total = ref(0)
 const loading = ref(false)
 const searchQuery = ref('')
+let searchTimer = null
 const paymentLabels = { wechat: '微信', alipay: '支付宝', cash: '现金' }
 const paymentIcons = { wechat: 'simple-icons:wechat', alipay: 'simple-icons:alipay', cash: 'mdi:cash' }
 
@@ -70,7 +72,7 @@ async function onRefundItemConfirm() {
     const data = await orderApi.get(detailOrder.value.id)
     detailItems.value = (data.items || []).map(i => ({ ...i, _refundQty: 0 }))
     detailOrder.value = data.order
-    await fetchOrders()
+    await searchOrders()
   } catch {
   } finally {
     refundItemShow.value = false
@@ -82,7 +84,7 @@ function handleRefund(order) {
     try {
       await orderApi.refund(order.id)
       message.success('订单已退款')
-      await fetchOrders()
+      await searchOrders()
     } catch {
     }
   }, '确定退款')
@@ -93,42 +95,39 @@ function handleDelete(order) {
     try {
       await orderApi.delete(order.id)
       message.success('订单已删除')
-      await fetchOrders()
+      await searchOrders()
     } catch {
     }
   }, '确定删除')
 }
 
-// ── 分页 ──
+// ── 分页与搜索 ──
 const pagination = reactive({
   page: 1,
   pageSize: 10,
   pageSizes: [5, 10, 20, 50]
 })
 
-const paginatedOrders = computed(() => {
-  const start = (pagination.page - 1) * pagination.pageSize
-  return filteredOrders.value.slice(start, start + pagination.pageSize)
-})
-
-async function fetchOrders() {
+async function searchOrders() {
   loading.value = true
   try {
-    orders.value = await orderApi.list()
-  } catch { }
+    const res = await orderApi.search(searchQuery.value.trim(), pagination.page, pagination.pageSize)
+    orders.value = res.records
+    total.value = res.total
+  } catch {
+  }
   loading.value = false
 }
 
-onMounted(fetchOrders)
+function onSearchInput() {
+  clearTimeout(searchTimer)
+  pagination.page = 1
+  searchTimer = setTimeout(searchOrders, 300)
+}
 
-const filteredOrders = computed(() => {
-  if (!searchQuery.value) return orders.value
-  const q = searchQuery.value.toLowerCase()
-  return orders.value.filter(o =>
-    o.orderNo?.toLowerCase().includes(q) ||
-    paymentLabels[o.payment]?.includes(q)
-  )
-})
+watch(() => [pagination.page, pagination.pageSize], searchOrders)
+
+onMounted(searchOrders)
 
 
 const orderColumns = [
@@ -203,7 +202,7 @@ const totalRevenue = computed(() =>
           <Icon icon="mdi:magnify" width="16"
             class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 dark:text-gray-500" />
           <input v-model="searchQuery" type="text" placeholder="搜索订单号..."
-            class="w-52 h-9 pl-9 pr-3 rounded-xl bg-surface dark:bg-[#1a1a1a] text-sm text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant/40 dark:placeholder:text-gray-600 font-body" />
+            class="w-52 h-9 pl-9 pr-3 rounded-xl bg-surface dark:bg-[#1a1a1a] text-sm text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant/40 dark:placeholder:text-gray-600 font-body" @input="onSearchInput" />
         </div>
       </div>
     </div>
@@ -214,20 +213,20 @@ const totalRevenue = computed(() =>
       <div v-if="loading" class="flex-1 flex items-center justify-center">
         <Icon icon="mdi:loading" width="24" class="animate-spin text-on-surface-variant dark:text-gray-400" />
       </div>
-      <div v-else-if="paginatedOrders.length === 0"
+      <div v-else-if="orders.length === 0"
         class="flex-1 flex flex-col items-center justify-center gap-3 text-on-surface-variant/50 dark:text-gray-500">
         <Icon icon="mdi:receipt-text-outline" width="48" class="opacity-40" />
         <span class="text-sm font-body">暂无订单</span>
       </div>
       <div v-else>
-        <n-data-table :bordered="false" :columns="orderColumns" :data="paginatedOrders" size="small" scroll-x="900" />
+        <n-data-table :bordered="false" :columns="orderColumns" :data="orders" size="small" scroll-x="900" />
       </div>
     </n-card>
     <div class="flex justify-end pt-2">
       <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize"
-        :item-count="filteredOrders.length" :page-sizes="pagination.pageSizes" show-size-picker>
+        :item-count="total" :page-sizes="pagination.pageSizes" show-size-picker>
         <template #prefix>
-          <span class="text-xs text-on-surface-variant">共 {{ filteredOrders.length }} 条</span>
+          <span class="text-xs text-on-surface-variant">共 {{ total }} 条</span>
         </template>
       </n-pagination>
     </div>

@@ -16,6 +16,9 @@ export const productApi = {
   list() {
     return request.get('/products')
   },
+  search(keyword = '', page = 1, pageSize = 20) {
+    return request.get('/products/search', { params: { keyword, page, pageSize } })
+  },
   get(id) {
     return request.get(`/products/${id}`)
   },
@@ -39,6 +42,9 @@ export const productApi = {
 export const orderApi = {
   list() {
     return request.get('/orders')
+  },
+  search(keyword = '', page = 1, pageSize = 20) {
+    return request.get('/orders/search', { params: { keyword, page, pageSize } })
   },
   get(id) {
     return request.get(`/orders/${id}`)
@@ -84,6 +90,9 @@ export const userApi = {
 export const systemUserApi = {
   list() {
     return request.get('/system/users')
+  },
+  search(keyword = '', page = 1, pageSize = 20) {
+    return request.get('/system/users/search', { params: { keyword, page, pageSize } })
   },
   get(id) {
     return request.get(`/system/users/${id}`)

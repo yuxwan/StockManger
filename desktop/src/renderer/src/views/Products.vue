@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, h, onMounted } from 'vue'
+import { ref, reactive, computed, h, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
@@ -11,13 +11,27 @@ const router = useRouter()
 const message = useMessage()
 
 const products = ref([])
+const total = ref(0)
+const searchLoading = ref(false)
+const searchQuery = ref('')
+let searchTimer = null
 
 const lowStockThreshold = 10
 
-async function fetchProducts() {
+async function searchProducts() {
+  searchLoading.value = true
   try {
-    products.value = await productApi.list()
+    const res = await productApi.search(searchQuery.value.trim(), pagination.page, pagination.pageSize)
+    products.value = res.records
+    total.value = res.total
   } catch { }
+  finally { searchLoading.value = false }
+}
+
+function onSearchInput() {
+  clearTimeout(searchTimer)
+  pagination.page = 1
+  searchTimer = setTimeout(searchProducts, 300)
 }
 
 // ── 确认弹窗 ──
@@ -65,7 +79,7 @@ async function confirmStockAdjust() {
     const label = stockDialogMode.value === 'in' ? '入库' : '出库'
     message.success(`${label}成功：${product.name} × ${stockQuantity.value}`)
     stockDialogShow.value = false
-    await fetchProducts()
+    await searchProducts()
   } catch {
     stockDialogShow.value = false
   }
@@ -76,15 +90,16 @@ function handleDelete(product) {
     try {
       await productApi.delete(product.id)
       message.success('商品已删除')
-      await fetchProducts()
+      await searchProducts()
     } catch {
     }
   })
 }
 
-onMounted(() => {
-  fetchProducts()
-})
+// 分页变化时重新搜索
+watch(() => [pagination.page, pagination.pageSize], searchProducts)
+
+onMounted(searchProducts)
 
 function formatExpiry(expiry) {
   if (!expiry) return ''
@@ -95,15 +110,11 @@ function formatExpiry(expiry) {
   return `${n}${t}`
 }
 
-const totalProducts = computed(() => products.value.length)
+const totalProducts = computed(() => total.value)
 
-const lowStockCount = computed(() =>
-  products.value.filter(p => p.stock < lowStockThreshold).length
-)
+const lowStockCount = computed(() => 0) // 服务端分页后，低库存数由后端提供
 
-const totalValue = computed(() =>
-  isCashier ? 0 : products.value.reduce((s, p) => s + (p.purchasePrice || p.price) * p.stock, 0)
-)
+const totalValue = computed(() => 0) // 暂不支持
 
 const pagination = reactive({
   page: 1,
@@ -111,16 +122,11 @@ const pagination = reactive({
   pageSizes: [5, 10, 20, 50]
 })
 
-const paginatedProducts = computed(() => {
-  const start = (pagination.page - 1) * pagination.pageSize
-  return products.value.slice(start, start + pagination.pageSize)
-})
-
 const isCashier = localStorage.getItem('userRole') === 'cashier'
 
 const productColumns = computed(() => {
   const cols = [
-    { title: '条码', key: 'barcode', minWidth: 120 },
+    { title: '条码', key: 'barcode', minWidth: 150 },
     { title: '商品名称', key: 'name', minWidth: 150 },
     { title: '规格型号', key: 'spec', minWidth: 120 },
     { title: '存放位置', key: 'location', minWidth: 100 },
@@ -313,9 +319,13 @@ function doPrint() {
       <!-- 商品列表 -->
       <n-card  style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
         <template #header>
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-body font-semibold uppercase tracking-wider text-on-surface-variant">商品清单</span>
-            <div class="flex items-center gap-2">
+          <div class="flex items-center justify-between gap-4">
+            <n-input v-model:value="searchQuery" placeholder="搜索商品名称、条码、规格..." clearable style="max-width:320px" @update:value="onSearchInput">
+              <template #prefix>
+                <Icon icon="mdi:magnify" class="text-on-surface-variant/40 dark:text-gray-500" />
+              </template>
+            </n-input>
+            <div class="flex items-center gap-2 shrink-0">
               <button class="h-8 px-3.5 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5" @click="showPrintModal = true">
                 <Icon icon="mdi:printer-outline" width="14" />打印标签
               </button>
@@ -332,15 +342,15 @@ function doPrint() {
           <span class="text-sm font-body">暂无商品</span>
         </div>
         <div v-else>
-          <n-data-table :bordered="false" :columns="productColumns" :data="paginatedProducts" size="small" scroll-x="1200" />
+          <n-data-table :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1200" :loading="searchLoading" />
         </div>
       </n-card>
 
       <!-- 分页 -->
-      <div v-if="products.length > 0" class="flex justify-end pt-2">
-        <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize" :item-count="products.length" :page-sizes="pagination.pageSizes" show-size-picker>
+      <div v-if="total > 0" class="flex justify-end pt-2">
+        <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize" :item-count="total" :page-sizes="pagination.pageSizes" show-size-picker>
           <template #prefix>
-            <span class="text-xs text-on-surface-variant">共 {{ products.length }} 条</span>
+            <span class="text-xs text-on-surface-variant">共 {{ total }} 条</span>
           </template>
         </n-pagination>
       </div>

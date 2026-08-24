@@ -2,12 +2,15 @@ package com.luckyun.stock.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luckyun.stock.entity.Product;
 import com.luckyun.stock.service.OperationLogService;
 import com.luckyun.stock.service.ProductService;
 import com.luckyun.stock.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,6 +31,21 @@ public class ProductController {
         long userId = StpUtil.getLoginIdAsLong();
         var user = userService.getById(userId);
         return user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知";
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<Product>> search(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "20") int pageSize) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(Product::getName, keyword)
+                    .or().like(Product::getBarcode, keyword)
+                    .or().like(Product::getSpec, keyword);
+        }
+        wrapper.orderByDesc(Product::getId);
+        return ResponseEntity.ok(productService.page(new Page<>(page, pageSize), wrapper));
     }
 
     @GetMapping
