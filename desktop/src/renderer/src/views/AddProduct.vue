@@ -5,6 +5,7 @@ import { Icon } from '@iconify/vue'
 import JsBarcode from 'jsbarcode'
 import message from '../utils/message'
 import { productApi } from '../api'
+import { hasPermission, loadMenus } from '../composables/permission'
 
 const router = useRouter()
 const route = useRoute()
@@ -34,6 +35,16 @@ const totalPrice = computed(() => {
 })
 
 onMounted(async () => {
+  // 按钮权限守卫：新增/编辑页分别要求 products:add / products:edit（后端接口同样会校验）
+  try {
+    await loadMenus()
+  } catch {}
+  const need = isEdit.value ? 'products:edit' : 'products:add'
+  if (!hasPermission(need)) {
+    message.warning(isEdit.value ? '无编辑商品的权限' : '无新增商品的权限')
+    router.back()
+    return
+  }
   // 编辑模式：加载商品数据
   if (isEdit.value) {
     try {

@@ -1,6 +1,7 @@
 package com.luckyun.stock.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -67,6 +68,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @SaCheckPermission("products:add")
     public ResponseEntity<?> create(@RequestBody Product product) {
         // 条码重复时累加库存
         if (product.getBarcode() != null && !product.getBarcode().isEmpty()) {
@@ -99,6 +101,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @SaCheckPermission("products:edit")
     public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product product) {
         Product old = productService.getById(id);
         product.setId(id);
@@ -111,6 +114,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @SaCheckPermission("products:delete")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         Product product = productService.getById(id);
         productService.removeById(id);
@@ -121,10 +125,25 @@ public class ProductController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{id}/stock")
-    public ResponseEntity<?> adjustStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
-        int delta = body.get("delta");
-        if (delta == 0) return ResponseEntity.badRequest().body(Map.of("msg", "调整数量不能为0"));
+    /** 入库 */
+    @PostMapping("/{id}/stock-in")
+    @SaCheckPermission("products:stock-in")
+    public ResponseEntity<?> stockIn(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        int quantity = body.getOrDefault("quantity", 0);
+        if (quantity <= 0) return ResponseEntity.badRequest().body(Map.of("msg", "入库数量必须大于0"));
+        return adjustStock(id, quantity);
+    }
+
+    /** 出库 */
+    @PostMapping("/{id}/stock-out")
+    @SaCheckPermission("products:stock-out")
+    public ResponseEntity<?> stockOut(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        int quantity = body.getOrDefault("quantity", 0);
+        if (quantity <= 0) return ResponseEntity.badRequest().body(Map.of("msg", "出库数量必须大于0"));
+        return adjustStock(id, -quantity);
+    }
+
+    private ResponseEntity<?> adjustStock(Long id, int delta) {
         Product product = productService.getById(id);
         if (product == null) return ResponseEntity.badRequest().body(Map.of("msg", "商品不存在"));
         int newStock = product.getStock() + delta;

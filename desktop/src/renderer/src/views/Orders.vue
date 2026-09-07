@@ -2,7 +2,7 @@
 import { ref, reactive, computed, h, onMounted, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
-import { orderApi } from '../api'
+import { orderApi, systemUserApi } from '../api'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const message = useMessage()
@@ -14,6 +14,102 @@ const searchQuery = ref('')
 let searchTimer = null
 const paymentLabels = { wechat: '微信', alipay: '支付宝', cash: '现金' }
 const paymentIcons = { wechat: 'simple-icons:wechat', alipay: 'simple-icons:alipay', cash: 'mdi:cash' }
+
+// ── 筛选条件：时间（本日/本月/本季度/本年/自定义）+ 卖出人 ──
+const timePresets = [
+  { key: 'all', label: '全部' },
+  { key: 'today', label: '本日' },
+  { key: 'month', label: '本月' },
+  { key: 'quarter', label: '本季度' },
+  { key: 'year', label: '本年' }
+]
+const timeRange = ref('all') // all | today | month | quarter | year | custom
+const customRange = ref(null) // [startMs, endMs] | null
+const sellerId = ref(null)
+const staffOptions = ref([])
+
+const userMap = computed(() => {
+  const m = {}
+  staffOptions.value.forEach(u => { m[u.value] = u.label })
+  return m
+})
+
+/** 当前高亮的时间键（custom 且已选区间才算自定义） */
+const activeTimeKey = computed(() =>
+  timeRange.value === 'custom' && customRange.value ? 'custom' : timeRange.value
+)
+
+/** 是否有生效中的筛选条件（控制"重置"显隐） */
+const hasFilter = computed(() => timeRange.value !== 'all' || !!sellerId.value)
+
+function pad(n) { return n < 10 ? '0' + n : '' + n }
+function fmtDate(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+function fmtDateTime(d) {
+  return `${fmtDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
+/** 按快捷项计算 [start, end] 本地时间；all 返回 null 表示不限 */
+function presetRange(key) {
+  if (key === 'all') return null
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  let start, end
+  if (key === 'today') {
+    start = new Date(y, m, now.getDate(), 0, 0, 0)
+    end = new Date(y, m, now.getDate(), 23, 59, 59)
+  } else if (key === 'month') {
+    start = new Date(y, m, 1, 0, 0, 0)
+    end = new Date(y, m + 1, 0, 23, 59, 59)
+  } else if (key === 'quarter') {
+    const qm = Math.floor(m / 3) * 3
+    start = new Date(y, qm, 1, 0, 0, 0)
+    end = new Date(y, qm + 3, 0, 23, 59, 59)
+  } else if (key === 'year') {
+    start = new Date(y, 0, 1, 0, 0, 0)
+    end = new Date(y, 11, 31, 23, 59, 59)
+  } else {
+    return null
+  }
+  return { start, end }
+}
+
+function currentRange() {
+  if (timeRange.value === 'custom' && Array.isArray(customRange.value) && customRange.value.length === 2) {
+    return { start: new Date(customRange.value[0]), end: new Date(customRange.value[1]) }
+  }
+  return presetRange(timeRange.value)
+}
+
+function onTimePreset(key) {
+  timeRange.value = key
+  if (key !== 'custom') customRange.value = null
+  if (key !== 'custom') applyFilterChange()
+}
+
+function onCustomRangeChange(val) {
+  customRange.value = val || null
+  timeRange.value = val ? 'custom' : 'all'
+  applyFilterChange()
+}
+
+function onSellerChange() {
+  applyFilterChange()
+}
+
+function resetFilters() {
+  timeRange.value = 'all'
+  customRange.value = null
+  sellerId.value = null
+  applyFilterChange()
+}
+
+function applyFilterChange() {
+  pagination.page = 1
+  searchOrders()
+}
 
 // ── 订单详情 ──
 const showDetail = ref(false)
@@ -110,13 +206,31 @@ const pagination = reactive({
 
 async function searchOrders() {
   loading.value = true
+  const range = currentRange()
   try {
-    const res = await orderApi.search(searchQuery.value.trim(), pagination.page, pagination.pageSize)
+    const params = {
+      keyword: searchQuery.value.trim(),
+      sellerId: sellerId.value || undefined,
+      startTime: range ? fmtDateTime(range.start) : undefined,
+      endTime: range ? fmtDateTime(range.end) : undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize
+    }
+    const res = await orderApi.search(params)
     orders.value = res.records
     total.value = res.total
   } catch {
   }
   loading.value = false
+}
+
+async function fetchStaff() {
+  try {
+    const users = await systemUserApi.list()
+    staffOptions.value = users
+      .filter(u => u.status !== 0)
+      .map(u => ({ label: u.nickname || u.username, value: u.id }))
+  } catch { }
 }
 
 function onSearchInput() {
@@ -127,12 +241,22 @@ function onSearchInput() {
 
 watch(() => [pagination.page, pagination.pageSize], searchOrders)
 
-onMounted(searchOrders)
+onMounted(() => {
+  fetchStaff()
+  searchOrders()
+})
 
 
 const orderColumns = [
   { title: '订单号', key: 'orderNo', minWidth: 200 },
   { title: '时间', key: 'createTime', minWidth: 160 },
+  {
+    title: '销售员', key: 'userId', minWidth: 90,
+    render(row) {
+      const name = userMap.value[row.userId]
+      return h('span', { class: 'text-sm text-on-surface dark:text-inverse-on-surface' }, name || '—')
+    }
+  },
   {
     title: '支付方式', key: 'payment', minWidth: 100,
     render(row) {
@@ -186,9 +310,9 @@ const totalRevenue = computed(() =>
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col gap-6">
+  <div class="flex-1 min-h-0 flex flex-col gap-6">
     <!-- 页面标题 -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between shrink-0">
       <div>
         <h1 class="text-2xl font-body font-bold tracking-tight">订单管理</h1>
         <p class="text-sm text-on-surface-variant dark:text-gray-400 font-body mt-1">查看和管理所有交易订单</p>
@@ -207,9 +331,49 @@ const totalRevenue = computed(() =>
       </div>
     </div>
 
+    <!-- 筛选条件：时间范围 + 卖出人（仪表盘同款分段按钮） -->
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
+      <div class="flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-white/5 border border-outline-variant/50 dark:border-[#333]">
+        <button v-for="p in timePresets" :key="p.key"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-body font-semibold transition-all duration-200"
+          :class="activeTimeKey === p.key
+            ? 'bg-black dark:bg-white text-white dark:text-black shadow-sm'
+            : 'text-on-surface-variant dark:text-gray-400 hover:text-on-surface dark:hover:text-inverse-on-surface'"
+          @click="onTimePreset(p.key)">
+          {{ p.label }}
+        </button>
+        <button
+          class="px-3.5 py-1.5 rounded-lg text-xs font-body font-semibold transition-all duration-200 flex items-center gap-1"
+          :class="activeTimeKey === 'custom'
+            ? 'bg-black dark:bg-white text-white dark:text-black shadow-sm'
+            : 'text-on-surface-variant dark:text-gray-400 hover:text-on-surface dark:hover:text-inverse-on-surface'"
+          @click="onTimePreset('custom')">
+          <Icon v-if="activeTimeKey !== 'custom'" icon="mdi:calendar-range" width="13" />
+          自定义
+        </button>
+        <transition name="date-fade">
+          <n-date-picker v-if="timeRange === 'custom'" type="daterange" size="small"
+            style="width: 250px; margin-left: 2px" clearable :value="customRange"
+            @update:value="onCustomRangeChange" />
+        </transition>
+      </div>
+      <div class="flex items-center gap-1 p-1 rounded-xl bg-white dark:bg-white/5 border border-outline-variant/50 dark:border-[#333]">
+        <span class="pl-1.5 pr-0.5 text-xs font-semibold text-on-surface-variant dark:text-gray-400 flex items-center gap-1">
+          <Icon icon="mdi:account-tie-outline" width="13" />销售员
+        </span>
+        <n-select :value="sellerId" size="small" clearable placeholder="全部" style="width: 130px"
+          :options="staffOptions" @update:value="onSellerChange" />
+      </div>
+      <button v-if="hasFilter"
+        class="px-3 py-1.5 rounded-lg text-xs font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1"
+        @click="resetFilters">
+        <Icon icon="mdi:refresh" width="13" />重置
+      </button>
+    </div>
+
     <!-- 订单列表 -->
-    <n-card  style="flex:1;display:flex;flex-direction:column"
-      content-style="flex:1;display:flex;flex-direction:column">
+    <n-card class="flex-1 min-h-0 flex flex-col"
+      content-style="flex:1;display:flex;flex-direction:column;min-height:0">
       <div v-if="loading" class="flex-1 flex items-center justify-center">
         <Icon icon="mdi:loading" width="24" class="animate-spin text-on-surface-variant dark:text-gray-400" />
       </div>
@@ -218,11 +382,12 @@ const totalRevenue = computed(() =>
         <Icon icon="mdi:receipt-text-outline" width="48" class="opacity-40" />
         <span class="text-sm font-body">暂无订单</span>
       </div>
-      <div v-else>
-        <n-data-table :bordered="false" :columns="orderColumns" :data="orders" size="small" scroll-x="900" />
+      <div v-else class="flex-1 min-h-0">
+        <n-data-table flex-height :bordered="false" :columns="orderColumns" :data="orders" size="small" scroll-x="900"
+          style="height:100%" />
       </div>
     </n-card>
-    <div class="flex justify-end pt-2">
+    <div v-if="total > 0" class="flex justify-end pt-2 shrink-0">
       <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize"
         :item-count="total" :page-sizes="pagination.pageSizes" show-size-picker>
         <template #prefix>
@@ -258,6 +423,13 @@ const totalRevenue = computed(() =>
                   支付方式</div>
                 <div class="text-sm font-body text-on-surface dark:text-inverse-on-surface">{{
                   paymentLabels[detailOrder.payment] || detailOrder.payment }}</div>
+              </div>
+              <div>
+                <div
+                  class="text-[10px] font-body font-semibold uppercase tracking-wider text-on-surface-variant/50 dark:text-gray-500 mb-1">
+                  销售员</div>
+                <div class="text-sm font-body text-on-surface dark:text-inverse-on-surface">{{
+                  userMap[detailOrder.userId] || '—' }}</div>
               </div>
               <div>
                 <div
@@ -308,7 +480,7 @@ const totalRevenue = computed(() =>
                     </div>
                     <div v-if="detailOrder.status === 'completed' && item.refundedQty < item.quantity">
                       <button
-                        class="inline-flex items-center gap-1 py-1 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                        class="inline-flex items-center gap-1 py-1 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 px-1"
                         @click="handleItemRefund(item)">
                         单品退款
                         <Icon icon="mdi:undo-variant" width="12" />
@@ -393,5 +565,15 @@ const totalRevenue = computed(() =>
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(4px);
+}
+
+/* 自定义日期选择器淡入 */
+.date-fade-enter-active,
+.date-fade-leave-active {
+  transition: opacity 150ms ease;
+}
+.date-fade-enter-from,
+.date-fade-leave-to {
+  opacity: 0;
 }
 </style>

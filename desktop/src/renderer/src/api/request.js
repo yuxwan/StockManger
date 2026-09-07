@@ -24,6 +24,7 @@ request.interceptors.response.use(
       localStorage.removeItem('userName')
       localStorage.removeItem('userNickname')
       localStorage.removeItem('userRole')
+      localStorage.removeItem('permissions')
       message.error('登录已过期，请重新登录')
       setTimeout(() => {
         window.location.hash = '#/login'

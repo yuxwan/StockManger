@@ -34,8 +34,11 @@ export const productApi = {
   delete(id) {
     return request.delete(`/products/${id}`)
   },
-  adjustStock(id, delta) {
-    return request.patch(`/products/${id}/stock`, { delta })
+  stockIn(id, quantity) {
+    return request.post(`/products/${id}/stock-in`, { quantity })
+  },
+  stockOut(id, quantity) {
+    return request.post(`/products/${id}/stock-out`, { quantity })
   }
 }
 
@@ -43,8 +46,9 @@ export const orderApi = {
   list() {
     return request.get('/orders')
   },
-  search(keyword = '', page = 1, pageSize = 20) {
-    return request.get('/orders/search', { params: { keyword, page, pageSize } })
+  /** @param params { keyword?, sellerId?, startTime?, endTime?, page?, pageSize? } */
+  search(params = {}) {
+    return request.get('/orders/search', { params })
   },
   get(id) {
     return request.get(`/orders/${id}`)
@@ -66,9 +70,6 @@ export const orderApi = {
 export const reportApi = {
   summary(dateRange) {
     return request.get('/reports/summary', { params: { dateRange } })
-  },
-  staffSummary(dateRange) {
-    return request.get('/reports/staff-summary', { params: { dateRange } })
   }
 }
 

@@ -5,11 +5,9 @@ import com.luckyun.stock.dto.ReportSummaryDTO;
 import com.luckyun.stock.entity.Order;
 import com.luckyun.stock.entity.OrderItem;
 import com.luckyun.stock.entity.Product;
-import com.luckyun.stock.entity.User;
 import com.luckyun.stock.mapper.OrderItemMapper;
 import com.luckyun.stock.mapper.OrderMapper;
 import com.luckyun.stock.mapper.ProductMapper;
-import com.luckyun.stock.mapper.UserMapper;
 import com.luckyun.stock.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +27,6 @@ public class ReportServiceImpl implements ReportService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final ProductMapper productMapper;
-    private final UserMapper userMapper;
 
     @Override
     public ReportSummaryDTO getSummary(String dateRange) {
@@ -168,68 +165,6 @@ public class ReportServiceImpl implements ReportService {
         dto.setLowStockProducts(lowStockProducts);
 
         return dto;
-    }
-
-    /**
-     * 按员工统计：销售额 / 订单数 / 退款额，用于分红计算。
-     */
-    @Override
-    public List<Map<String, Object>> getStaffSummary(String dateRange) {
-        LocalDateTime start = getStartTime(dateRange);
-        LocalDateTime end = LocalDateTime.now();
-
-        List<Order> orders = orderMapper.selectList(new LambdaQueryWrapper<Order>()
-                .ge(Order::getCreateTime, start)
-                .le(Order::getCreateTime, end)
-                .isNotNull(Order::getUserId));
-
-        // staffId -> [totalRevenue, refundAmount, orderCount]
-        Map<Long, Object[]> agg = new HashMap<>();
-        for (Order o : orders) {
-            Long uid = o.getUserId();
-            Object[] acc = agg.computeIfAbsent(uid, k -> new Object[]{BigDecimal.ZERO, BigDecimal.ZERO, 0L});
-            boolean completed = "completed".equals(o.getStatus());
-            BigDecimal amount = o.getTotal() != null ? o.getTotal() : BigDecimal.ZERO;
-            if (completed) {
-                acc[0] = ((BigDecimal) acc[0]).add(amount);
-                acc[2] = (Long) acc[2] + 1;
-            } else {
-                acc[1] = ((BigDecimal) acc[1]).add(amount);
-            }
-        }
-
-        // 名称映射
-        Map<Long, String> nameMap = new HashMap<>();
-        if (!agg.isEmpty()) {
-            userMapper.selectBatchIds(agg.keySet()).forEach(u -> nameMap.put(u.getId(), u.getNickname() != null ? u.getNickname() : u.getUsername()));
-        }
-
-        BigDecimal grandTotal = agg.values().stream()
-                .map(a -> (BigDecimal) a[0])
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        List<Map<String, Object>> result = agg.entrySet().stream().map(e -> {
-            Map<String, Object> m = new HashMap<>();
-            m.put("staffId", e.getKey());
-            m.put("staffName", nameMap.getOrDefault(e.getKey(), "未知"));
-            BigDecimal revenue = (BigDecimal) e.getValue()[0];
-            m.put("totalRevenue", revenue);
-            m.put("refundAmount", e.getValue()[1]);
-            m.put("orderCount", e.getValue()[2]);
-            // 销售额占比（分红参考）
-            if (grandTotal.signum() > 0) {
-                m.put("share",
-                        revenue.divide(grandTotal, 4, RoundingMode.HALF_UP)
-                                .multiply(BigDecimal.valueOf(100))
-                                .setScale(1, RoundingMode.HALF_UP));
-            } else {
-                m.put("share", BigDecimal.ZERO);
-            }
-            return m;
-        }).sorted((a, b) -> ((BigDecimal) b.get("totalRevenue")).compareTo((BigDecimal) a.get("totalRevenue")))
-                .collect(Collectors.toList());
-
-        return result;
     }
 
     private LocalDateTime getStartTime(String dateRange) {

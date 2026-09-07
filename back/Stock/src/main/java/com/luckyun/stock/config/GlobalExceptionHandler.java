@@ -1,6 +1,7 @@
 package com.luckyun.stock.config;
 
 import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,13 @@ public class GlobalExceptionHandler {
         log.warn("未登录或token已过期: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("code", 401, "msg", "未登录或token已过期"));
+    }
+
+    @ExceptionHandler(NotPermissionException.class)
+    public ResponseEntity<?> handleNotPermission(NotPermissionException e) {
+        log.warn("无操作权限: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("code", 403, "msg", "无操作权限，请联系管理员在菜单中分配"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

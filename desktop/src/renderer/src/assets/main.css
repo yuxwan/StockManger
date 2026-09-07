@@ -80,3 +80,11 @@ button:focus-visible,
 .page-leave-to {
   opacity: 0;
 }
+
+/* ── 加速 naive-ui 弹层（modal/dialog 遮罩淡入 + 内容缩放渐显）默认 0.25s 偏慢 ── */
+html body .fade-in-transition-enter-active,
+html body .fade-in-transition-leave-active,
+html body .fade-in-scale-up-transition-enter-active,
+html body .fade-in-scale-up-transition-leave-active {
+  transition-duration: 0.1s !important;
+}

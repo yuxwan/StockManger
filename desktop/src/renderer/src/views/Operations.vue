@@ -1,11 +1,13 @@
 <template>
-  <div class="flex-1 flex flex-col gap-6">
-    <div>
+  <!-- 最外层不产生滚动条：根与卡片都限制在 main 可视高度内（min-h-0），
+       数据多时只由 n-data-table(flex-height) 在自身区域内滚动 -->
+  <div class="flex-1 min-h-0 flex flex-col gap-6">
+    <div class="shrink-0">
       <h1 class="text-2xl font-body font-bold tracking-tight">操作日志</h1>
       <p class="text-sm text-on-surface-variant dark:text-gray-400 font-body mt-1">商品新增、编辑、入库、出库等操作记录</p>
     </div>
 
-    <n-card  style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
+    <n-card class="flex-1 min-h-0 flex flex-col" content-style="flex:1;display:flex;flex-direction:column;min-height:0">
       <div v-if="loading" class="flex-1 flex items-center justify-center">
         <Icon icon="mdi:loading" width="24" class="animate-spin text-on-surface-variant dark:text-gray-400" />
       </div>
@@ -14,12 +16,13 @@
         <Icon icon="mdi:clipboard-text-clock-outline" width="48" class="opacity-40" />
         <span class="text-sm font-body">暂无操作记录</span>
       </div>
-      <div v-else>
-        <n-data-table :bordered="false" :columns="columns" :data="paginatedLogs" size="small" />
+      <div v-else class="flex-1 min-h-0">
+        <n-data-table flex-height :bordered="false" :columns="columns" :data="paginatedLogs" size="small"
+          style="height:100%" />
       </div>
     </n-card>
 
-    <div class="flex justify-end pt-2">
+    <div class="flex justify-end pt-2 shrink-0">
       <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize"
         :item-count="logs.length" :page-sizes="pagination.pageSizes" show-size-picker>
         <template #prefix>

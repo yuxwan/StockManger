@@ -189,9 +189,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col gap-6">
+  <div class="flex-1 min-h-0 flex flex-col gap-6">
     <!-- 顶栏 -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between shrink-0">
       <div>
         <h1 class="text-2xl font-body font-bold tracking-tight">用户管理</h1>
         <p class="text-sm text-on-surface-variant dark:text-gray-400 font-body mt-1">管理系统用户账号和角色分配</p>
@@ -210,8 +210,9 @@ onMounted(() => {
     </div>
 
     <!-- 用户列表 -->
-    <n-card  style="flex:1">
-      <n-data-table :bordered="false" :loading="loading" size="small" scroll-x="850"
+    <n-card class="flex-1 min-h-0 flex flex-col" content-style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="flex-1 min-h-0">
+      <n-data-table flex-height :bordered="false" :loading="loading" size="small" scroll-x="850" style="height:100%"
         :columns="[
           { title: 'ID', key: 'id', minWidth: 60 },
           { title: '用户名', key: 'username', minWidth: 120 },
@@ -256,9 +257,10 @@ onMounted(() => {
             }
           }
         ]" :data="users" />
+      </div>
     </n-card>
 
-    <div v-if="total > 0" class="flex justify-end pt-2">
+    <div v-if="total > 0" class="flex justify-end pt-2 shrink-0">
       <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize"
         :item-count="total" :page-sizes="pagination.pageSizes" show-size-picker>
         <template #prefix>

@@ -1,11 +1,10 @@
 <template>
-  <Teleport to="body">
-    <Transition name="confirm">
-      <div v-if="visible" class="fixed inset-0 z-[9999] flex items-center justify-center">
-        <div class="fixed inset-0 bg-black/30 dark:bg-black/50" @click="onClose" />
-        <div
-          class="relative rounded-2xl bg-surface dark:bg-[#252525] shadow-xl border border-outline-variant/20 dark:border-[#333] w-[400px] overflow-hidden"
-        >
+  <!-- naive-ui n-modal：弹层层级与渐显动画统一由 naive-ui 管理 -->
+  <n-modal :show="visible" :mask-closable="true" transform-origin="center"
+    :on-update:show="(v) => { if (!v) onClose() }">
+    <div
+      class="relative rounded-2xl bg-surface dark:bg-[#252525] shadow-xl border border-outline-variant/20 dark:border-[#333] w-[400px] overflow-hidden"
+    >
           <div class="px-6 pt-6 pb-4">
             <!-- 标题 -->
             <div class="flex items-center gap-3 mb-4">
@@ -143,9 +142,7 @@
             </button>
           </div>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
+  </n-modal>
 </template>
 
 <script setup>
@@ -314,31 +311,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.confirm-enter-active {
-  transition: opacity 200ms ease;
-}
-.confirm-leave-active {
-  transition: opacity 150ms ease;
-}
-.confirm-enter-from,
-.confirm-leave-to {
-  opacity: 0;
-}
-.confirm-enter-active > div:last-child {
-  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease;
-}
-.confirm-leave-active > div:last-child {
-  transition: transform 150ms ease, opacity 150ms ease;
-}
-.confirm-enter-from > div:last-child {
-  transform: scale(0.92);
-  opacity: 0;
-}
-.confirm-leave-to > div:last-child {
-  transform: scale(0.92);
-  opacity: 0;
-}
-
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

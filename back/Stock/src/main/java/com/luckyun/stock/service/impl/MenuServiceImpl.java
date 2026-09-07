@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,19 +35,41 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         List<Long> roleIds = userRoleMapper.selectList(
                 new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId)
         ).stream().map(UserRole::getRoleId).collect(Collectors.toList());
-        // 获取所有角色的菜单 ID（去重）
-        Set<Long> menuIds = roleMenuMapper.selectList(
-                new LambdaQueryWrapper<RoleMenu>().in(RoleMenu::getRoleId, roleIds)
-        ).stream().map(RoleMenu::getMenuId).collect(Collectors.toSet());
-        // admin 角色拥有所有菜单
+        // admin（无角色记录视为超管）拥有所有菜单
         if (roleIds.isEmpty()) {
             List<Menu> all = list(new LambdaQueryWrapper<Menu>().orderByAsc(Menu::getSort));
             return buildTree(all, 0L);
         }
+        // 获取所有角色关联的菜单 ID，并补全其祖先（防止只勾选子节点导致父菜单断链）
+        Set<Long> menuIds = roleMenuMapper.selectList(
+                new LambdaQueryWrapper<RoleMenu>().in(RoleMenu::getRoleId, roleIds)
+        ).stream().map(RoleMenu::getMenuId).collect(Collectors.toSet());
+        Set<Long> expanded = expandWithAncestors(menuIds);
+        if (expanded.isEmpty()) return List.of();
         List<Menu> myMenus = list(new LambdaQueryWrapper<Menu>()
-                .in(Menu::getId, menuIds)
+                .in(Menu::getId, expanded)
                 .orderByAsc(Menu::getSort));
         return buildTree(myMenus, 0L);
+    }
+
+    /** 补全：对每个菜单ID沿 parentId 向上收集全部祖先，返回闭包（仅读取菜单树时内部使用，不落库） */
+    private Set<Long> expandWithAncestors(Set<Long> menuIds) {
+        if (menuIds == null || menuIds.isEmpty()) return new HashSet<>();
+        List<Menu> all = list();
+        Map<Long, Long> parentMap = new HashMap<>();
+        for (Menu m : all) {
+            parentMap.put(m.getId(), m.getParentId() == null ? 0L : m.getParentId());
+        }
+        Set<Long> result = new HashSet<>(menuIds);
+        for (Long id : menuIds) {
+            Set<Long> visited = new HashSet<>();
+            Long cur = parentMap.get(id);
+            while (cur != null && cur != 0L && visited.add(cur)) {
+                result.add(cur);
+                cur = parentMap.get(cur);
+            }
+        }
+        return result;
     }
 
     @Override

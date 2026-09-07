@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import { authApi, userApi } from '../api'
 import message from '../utils/message'
+import { clearPermissions } from '../composables/permission'
 
 const router = useRouter()
 const showPwdForm = ref(false)
@@ -44,6 +45,7 @@ async function logout() {
   localStorage.removeItem('userRole')
   localStorage.removeItem('userName')
   localStorage.removeItem('userNickname')
+  clearPermissions()
   router.push('/login')
 }
 

@@ -12,3 +12,6 @@ desktop/release/
 desktop/node_modules/
 desktop/out/
 *.psd
+
+# Reasonix agent 内部状态
+.reasonix/

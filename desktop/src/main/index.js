@@ -58,20 +58,27 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      devTools: isDev
+      // 本地开发/未打包运行始终可开 DevTools；正式安装包默认关闭，需要调试时以 STOCK_DEVTOOLS=1 启动可临时开启
+      devTools: !app.isPackaged || process.env.STOCK_DEVTOOLS === '1'
     }
   })
 
   if (isDev) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
-    mainWindow.webContents.on('before-input-event', (_, input) => {
-      if (input.key === 'F12') {
-        mainWindow.webContents.toggleDevTools()
-      }
-    })
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // F12 / Ctrl+Shift+I / Ctrl+Shift+J 打开开发者工具（dev 与本地调试均可，不依赖菜单）
+  mainWindow.webContents.on('before-input-event', (_, input) => {
+    if (input.type !== 'keyDown') return
+    const isF12 = input.key === 'F12'
+    const isDevShortcut = (input.control || input.meta) && input.shift &&
+      (input.key.toLowerCase() === 'i' || input.key.toLowerCase() === 'j')
+    if (isF12 || isDevShortcut) {
+      mainWindow.webContents.toggleDevTools()
+    }
+  })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url)

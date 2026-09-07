@@ -39,6 +39,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         save(role);
 
         if (menuIds != null && !menuIds.isEmpty()) {
+            // sys_role_menu 只存用户真实勾选的节点；父/主菜单由读取菜单树时动态补全，
+            // 避免回显时父节点 key 触发 naive-ui cascade 级联全选其下所有子菜单
             assignMenuPermissions(role.getId(), menuIds);
         }
         return role;
@@ -56,7 +58,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         role.setStatus(status != null ? status : 1);
         updateById(role);
 
-        // 更新菜单权限
+        // 更新菜单权限（只存用户真实勾选节点，父/主菜单读取时动态补全）
         roleMenuMapper.delete(new LambdaQueryWrapper<RoleMenu>().eq(RoleMenu::getRoleId, id));
         if (menuIds != null && !menuIds.isEmpty()) {
             assignMenuPermissions(id, menuIds);

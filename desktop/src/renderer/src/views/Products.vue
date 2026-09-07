@@ -5,6 +5,7 @@ import { useMessage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import JsBarcode from 'jsbarcode'
 import { productApi } from '../api'
+import { hasPermission, loadMenus } from '../composables/permission'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const router = useRouter()
@@ -17,6 +18,13 @@ const searchQuery = ref('')
 let searchTimer = null
 
 const lowStockThreshold = 10
+
+// 分页状态（须在 watch/searchProducts 引用前声明，避免 TDZ）
+const pagination = reactive({
+  page: 1,
+  pageSize: 10,
+  pageSizes: [5, 10, 20, 50]
+})
 
 async function searchProducts() {
   searchLoading.value = true
@@ -72,12 +80,16 @@ function closeStockDialog() {
 
 async function confirmStockAdjust() {
   const product = stockDialogProduct.value
-  if (!product || !stockQuantity.value || stockQuantity.value < 1) return
-  const delta = stockDialogMode.value === 'in' ? stockQuantity.value : -stockQuantity.value
+  const qty = stockQuantity.value
+  if (!product || !qty || qty < 1) return
   try {
-    await productApi.adjustStock(product.id, delta)
+    if (stockDialogMode.value === 'in') {
+      await productApi.stockIn(product.id, qty)
+    } else {
+      await productApi.stockOut(product.id, qty)
+    }
     const label = stockDialogMode.value === 'in' ? '入库' : '出库'
-    message.success(`${label}成功：${product.name} × ${stockQuantity.value}`)
+    message.success(`${label}成功：${product.name} × ${qty}`)
     stockDialogShow.value = false
     await searchProducts()
   } catch {
@@ -99,7 +111,11 @@ function handleDelete(product) {
 // 分页变化时重新搜索
 watch(() => [pagination.page, pagination.pageSize], searchProducts)
 
-onMounted(searchProducts)
+onMounted(() => {
+  // 加载当前用户按钮权限（MainLayout 已加载时会直接命中缓存）
+  loadMenus()
+  searchProducts()
+})
 
 function formatExpiry(expiry) {
   if (!expiry) return ''
@@ -116,12 +132,7 @@ const lowStockCount = computed(() => 0) // 服务端分页后，低库存数由�
 
 const totalValue = computed(() => 0) // 暂不支持
 
-const pagination = reactive({
-  page: 1,
-  pageSize: 10,
-  pageSizes: [5, 10, 20, 50]
-})
-
+// 仅用于「进货价 / 小计 / 库存总价」等字段级可见性；页面操作按钮一律走菜单按钮权限（hasPermission）
 const isCashier = localStorage.getItem('userRole') === 'cashier'
 
 const productColumns = computed(() => {
@@ -157,33 +168,28 @@ const productColumns = computed(() => {
       render(row) { return h('span', '¥' + ((row.purchasePrice || row.price) * row.stock).toLocaleString()) }
     })
   }
-  cols.push({
-    title: '操作', key: 'actions', width: 250, fixed: 'right',
-    render(row) {
-      return h('div', { class: 'inline-flex items-center gap-0.5' }, [
-        h('button', {
-          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10',
-          title: '入库',
-          onClick: () => openStockDialog(row, 'in')
-        }, [h(Icon, { icon: 'mdi:plus-circle-outline', width: 14 }), '入库']),
-        h('button', {
-          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10',
-          title: '出库',
-          onClick: () => openStockDialog(row, 'out')
-        }, [h(Icon, { icon: 'mdi:minus-circle-outline', width: 14 }), '出库']),
-        h('button', {
-          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10',
-          title: '编辑',
-          onClick: () => router.push('/products/edit/' + row.id)
-        }, [h(Icon, { icon: 'mdi:pencil-outline', width: 14 }), '编辑']),
-        h('button', {
-          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-500/10',
-          title: '删除',
-          onClick: () => handleDelete(row)
-        }, [h(Icon, { icon: 'mdi:delete-outline', width: 14 }), '删除'])
-      ])
-    }
-  })
+  // 操作列按钮均受菜单按钮权限控制（type=3），全部无权限时不显示该列
+  const actionDefs = [
+    { perm: 'products:stock-in', title: '入库', icon: 'mdi:plus-circle-outline', cls: 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10', text: '入库', action: (row) => openStockDialog(row, 'in') },
+    { perm: 'products:stock-out', title: '出库', icon: 'mdi:minus-circle-outline', cls: 'text-amber-600 dark:text-amber-400 hover:bg-amber-500/10', text: '出库', action: (row) => openStockDialog(row, 'out') },
+    { perm: 'products:edit', title: '编辑', icon: 'mdi:pencil-outline', cls: 'text-on-surface-variant dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10', text: '编辑', action: (row) => router.push('/products/edit/' + row.id) },
+    { perm: 'products:delete', title: '删除', icon: 'mdi:delete-outline', cls: 'text-red-500 hover:bg-red-500/10', text: '删除', action: (row) => handleDelete(row) }
+  ]
+  const visibleActions = actionDefs.filter(a => hasPermission(a.perm))
+  if (visibleActions.length > 0) {
+    cols.push({
+      title: '操作', key: 'actions', width: visibleActions.length * 62 + 8, fixed: 'right',
+      render(row) {
+        return h('div', { class: 'inline-flex items-center gap-0.5' }, visibleActions.map(a =>
+          h('button', {
+            class: `inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold ${a.cls}`,
+            title: a.title,
+            onClick: () => a.action(row)
+          }, [h(Icon, { icon: a.icon, width: 14 }), a.text])
+        ))
+      }
+    })
+  }
   return cols
 })
 
@@ -267,10 +273,10 @@ function doPrint() {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col">
-    <div class="flex-1 flex flex-col gap-6">
+  <div class="flex-1 min-h-0 flex flex-col">
+    <div class="flex-1 min-h-0 flex flex-col gap-6">
       <!-- 统计卡片 -->
-      <div class="flex gap-4">
+      <div class="flex gap-4 shrink-0">
         <n-card style="flex:1">
           <div class="flex items-center gap-4">
             <div class="w-11 h-11 rounded-xl bg-black/10 dark:bg-white/10 flex items-center justify-center shrink-0">
@@ -307,7 +313,7 @@ function doPrint() {
       </div>
 
       <!-- 商品列表 -->
-      <n-card  style="flex:1;display:flex;flex-direction:column" content-style="flex:1;display:flex;flex-direction:column">
+      <n-card class="flex-1 min-h-0 flex flex-col" content-style="flex:1;display:flex;flex-direction:column;min-height:0">
         <template #header>
           <div class="flex items-center justify-between gap-4">
             <n-input v-model:value="searchQuery" placeholder="搜索商品名称、条码、规格..." clearable style="max-width:320px" @update:value="onSearchInput">
@@ -316,10 +322,10 @@ function doPrint() {
               </template>
             </n-input>
             <div class="flex items-center gap-2 shrink-0">
-              <button class="h-8 px-3.5 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5" @click="showPrintModal = true">
+              <button v-if="hasPermission('products:print')" class="h-8 px-3.5 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5" @click="showPrintModal = true">
                 <Icon icon="mdi:printer-outline" width="14" />打印标签
               </button>
-              <button v-if="!isCashier" class="h-8 px-3.5 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex items-center gap-1.5" @click="$router.push('/products/add')">
+              <button v-if="hasPermission('products:add')" class="h-8 px-3.5 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex items-center gap-1.5" @click="$router.push('/products/add')">
                 <Icon icon="mdi:plus" width="14" />新增
               </button>
             </div>
@@ -331,13 +337,14 @@ function doPrint() {
           <Icon icon="mdi:package-variant-closed" width="48" class="opacity-40" />
           <span class="text-sm font-body">暂无商品</span>
         </div>
-        <div v-else>
-          <n-data-table :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1320" :loading="searchLoading" />
+        <div v-else class="flex-1 min-h-0">
+          <n-data-table flex-height :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1320"
+            :loading="searchLoading" style="height:100%" />
         </div>
       </n-card>
 
       <!-- 分页 -->
-      <div v-if="total > 0" class="flex justify-end pt-2">
+      <div v-if="total > 0" class="flex justify-end pt-2 shrink-0">
         <n-pagination v-model:page="pagination.page" v-model:page-size="pagination.pageSize" :item-count="total" :page-sizes="pagination.pageSizes" show-size-picker>
           <template #prefix>
             <span class="text-xs text-on-surface-variant">共 {{ total }} 条</span>
@@ -397,26 +404,24 @@ function doPrint() {
     />
 
     <!-- 库存调整弹窗 -->
-    <Transition name="stock">
-      <div v-if="stockDialogShow" class="fixed inset-0 z-[200] flex items-center justify-center" @click.self="closeStockDialog">
-        <div class="fixed inset-0 bg-black/30 dark:bg-black/50" />
-        <div class="relative w-[340px] rounded-2xl bg-surface dark:bg-[#252525] p-6 shadow-xl border border-outline-variant/20 dark:border-[#333]">
-          <h3 class="text-base font-body font-bold text-on-surface dark:text-inverse-on-surface">
-            {{ stockDialogMode === 'in' ? '入库' : '出库' }}
-          </h3>
-          <p class="mt-1.5 text-sm font-body text-on-surface-variant dark:text-gray-400">
-            {{ stockDialogProduct?.name }}（当前库存：{{ stockDialogProduct?.stock }}）
-          </p>
-          <div class="mt-4">
-            <n-input-number v-model:value="stockQuantity" :min="1" style="width:100%" />
-          </div>
-          <div class="flex items-center justify-end gap-2 mt-6">
-            <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors" @click="closeStockDialog">取消</button>
-            <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity" :disabled="!stockQuantity || stockQuantity < 1" @click="confirmStockAdjust">确认</button>
-          </div>
+    <n-modal :show="stockDialogShow" :mask-closable="true" transform-origin="center"
+      :on-update:show="(v) => { if (!v) closeStockDialog() }">
+      <div class="relative w-[340px] rounded-2xl bg-surface dark:bg-[#252525] p-6 shadow-xl border border-outline-variant/20 dark:border-[#333]">
+        <h3 class="text-base font-body font-bold text-on-surface dark:text-inverse-on-surface">
+          {{ stockDialogMode === 'in' ? '入库' : '出库' }}
+        </h3>
+        <p class="mt-1.5 text-sm font-body text-on-surface-variant dark:text-gray-400">
+          {{ stockDialogProduct?.name }}（当前库存：{{ stockDialogProduct?.stock }}）
+        </p>
+        <div class="mt-4">
+          <n-input-number v-model:value="stockQuantity" :min="1" style="width:100%" />
+        </div>
+        <div class="flex items-center justify-end gap-2 mt-6">
+          <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors" @click="closeStockDialog">取消</button>
+          <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity" :disabled="!stockQuantity || stockQuantity < 1" @click="confirmStockAdjust">确认</button>
         </div>
       </div>
-    </Transition>
+    </n-modal>
   </div>
 </template>
 
@@ -437,31 +442,5 @@ function doPrint() {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(4px);
-}
-
-/* 库存弹窗动画 */
-.stock-enter-active {
-  transition: opacity 200ms ease;
-}
-.stock-leave-active {
-  transition: opacity 150ms ease;
-}
-.stock-enter-from,
-.stock-leave-to {
-  opacity: 0;
-}
-.stock-enter-active > div:last-child {
-  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease;
-}
-.stock-leave-active > div:last-child {
-  transition: transform 150ms ease, opacity 150ms ease;
-}
-.stock-enter-from > div:last-child {
-  transform: scale(0.92);
-  opacity: 0;
-}
-.stock-leave-to > div:last-child {
-  transform: scale(0.92);
-  opacity: 0;
 }
 </style>

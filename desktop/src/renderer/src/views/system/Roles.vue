@@ -55,6 +55,38 @@ async function fetchMenus() {
   } catch { }
 }
 
+/**
+ * 回显 checked-keys 前的“半选祖先”剔除。
+ * naive-ui cascade 语义：checked-keys 里含父节点 key 时，会把其整棵子树都级联勾选。
+ * 而 sys_role_menu 历史上可能存有“仅为保证菜单树完整”的父节点（只勾了部分子菜单也会被落库），
+ * 若不剔除，第二次打开编辑时父目录下所有子菜单都会被自动全选。
+ * 剔除规则：若某节点子树中存在不在选中集合中的节点，说明它只是半选/补链，不应作为已勾选回显；
+ * 用户整组勾选的节点（全部子孙都在集合中）不受影响。
+ */
+function sanitizeCheckedKeys(ids, tree) {
+  const idSet = new Set(ids)
+  const nodeMap = new Map()
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      nodeMap.set(n.id, n)
+      if (n.children && n.children.length) walk(n.children)
+    }
+  }
+  walk(tree)
+  const subtreeMissing = (node) => {
+    for (const c of node.children || []) {
+      if (!idSet.has(c.id)) return true
+      if (subtreeMissing(c)) return true
+    }
+    return false
+  }
+  return ids.filter((id) => {
+    const node = nodeMap.get(id)
+    if (!node || !node.children || !node.children.length) return true
+    return !subtreeMissing(node)
+  })
+}
+
 function openCreate() {
   modalMode.value = 'create'
   editingId.value = null
@@ -68,6 +100,8 @@ function openCreate() {
 
 async function openEdit(id) {
   try {
+    // 回显需要基于完整菜单树剔除“半选祖先”，先确保菜单已加载
+    if (!menus.value.length) await fetchMenus()
     const data = await roleApi.get(id)
     const role = data.role || data
     modalMode.value = 'edit'
@@ -76,7 +110,7 @@ async function openEdit(id) {
     form.code = role.code
     form.remark = role.remark || ''
     form.status = role.status ?? 1
-    form.menuIds = data.menuIds || []
+    form.menuIds = sanitizeCheckedKeys(data.menuIds || [], menus.value)
     modalShow.value = true
   } catch {
     message.error('获取角色信息失败')
@@ -132,9 +166,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col gap-6">
+  <div class="flex-1 min-h-0 flex flex-col gap-6">
     <!-- 顶栏 -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between shrink-0">
       <div>
         <h1 class="text-2xl font-body font-bold tracking-tight">角色管理</h1>
         <p class="text-sm text-on-surface-variant dark:text-gray-400 font-body mt-1">管理系统角色和菜单权限分配</p>
@@ -145,8 +179,9 @@ onMounted(() => {
     </div>
 
     <!-- 角色列表 -->
-    <n-card  style="flex:1">
-      <n-data-table :bordered="false" :loading="loading" size="small" scroll-x="800"
+    <n-card class="flex-1 min-h-0 flex flex-col" content-style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="flex-1 min-h-0">
+      <n-data-table flex-height :bordered="false" :loading="loading" size="small" scroll-x="800" style="height:100%"
         :columns="[
           { title: 'ID', key: 'id', minWidth: 60 },
           { title: '角色名称', key: 'name', minWidth: 120 },
@@ -178,6 +213,7 @@ onMounted(() => {
             }
           }
         ]" :data="roles" />
+      </div>
     </n-card>
 
     <!-- 新增/编辑弹窗 -->

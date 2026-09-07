@@ -140,6 +140,16 @@ INSERT INTO sys_menu (name, icon, path, permission, parent_id, sort, type) VALUE
 ('角色管理', 'mdi:shield-account-outline', '/roles', 'system:roles', @sid, 2, 2),
 ('菜单管理', 'mdi:menu-open', '/menus', 'system:menus', @sid, 3, 2);
 
+-- 商品管理按钮权限（type=3），供角色分配
+SET @pid = (SELECT id FROM sys_menu WHERE permission = 'products' LIMIT 1);
+INSERT INTO sys_menu (name, icon, path, permission, parent_id, sort, type) VALUES
+('新增商品', '', '', 'products:add', @pid, 1, 3),
+('编辑商品', '', '', 'products:edit', @pid, 2, 3),
+('删除商品', '', '', 'products:delete', @pid, 3, 3),
+('商品入库', '', '', 'products:stock-in', @pid, 4, 3),
+('商品出库', '', '', 'products:stock-out', @pid, 5, 3),
+('打印标签', '', '', 'products:print', @pid, 6, 3);
+
 -- 默认角色
 INSERT INTO sys_role (name, code, remark) VALUES
 ('超级管理员', 'admin', '系统超级管理员，拥有所有权限'),

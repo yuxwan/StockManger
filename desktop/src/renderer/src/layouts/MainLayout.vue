@@ -2,7 +2,7 @@
 import { ref, h, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
-import { menuApi } from '../api'
+import { loadMenus, filterMenuButtons } from '../composables/permission'
 
 const route = useRoute()
 const router = useRouter()
@@ -77,7 +77,6 @@ const defaultMenuOptions = [
   { key: '/dashboard', icon: renderIcon('mdi:view-dashboard-outline'), label: '仪表盘' },
   { key: '/products', icon: renderIcon('mdi:package-variant-closed'), label: '商品管理' },
   { key: '/orders', icon: renderIcon('mdi:receipt-text-outline'), label: '订单管理' },
-  { key: '/performance', icon: renderIcon('mdi:chart-donut'), label: '员工业绩' },
   { key: '/operations', icon: renderIcon('mdi:clipboard-text-clock-outline'), label: '操作日志' }
 ]
 
@@ -97,7 +96,8 @@ onMounted(async () => {
   checkMaximized()
   window.addEventListener('resize', checkMaximized)
   try {
-    const menus = await menuApi.menus()
+    // loadMenus 同时刷新当前用户的按钮权限集合；type=3 的按钮节点不渲染为侧边栏菜单
+    const menus = filterMenuButtons(await loadMenus())
     if (menus && menus.length > 0) {
       menuOptions.value = menus.map(mapMenu)
     } else {
@@ -224,9 +224,8 @@ onMounted(async () => {
       <n-layout-content class="bg-surface dark:bg-[#1a1a1a]">
         <main class="flex-1 flex flex-col p-8 overflow-auto" style="min-height: 0; height: calc(100vh - 40px);">
           <router-view v-slot="{ Component }">
-            <Transition name="page" mode="out-in">
-              <component :is="Component" :key="`${$route.fullPath}_${refreshTick}`" />
-            </Transition>
+            <!-- 不包 Transition：此前 mode="out-in" 偶发卡住导致切换后内容区白屏且无法恢复 -->
+            <component :is="Component" :key="`${$route.fullPath}_${refreshTick}`" />
           </router-view>
         </main>
       </n-layout-content>
