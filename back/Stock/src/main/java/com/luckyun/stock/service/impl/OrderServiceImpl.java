@@ -70,6 +70,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             oi.setProductId(item.getProductId());
             oi.setProductName(item.getProductName());
             oi.setPrice(item.getPrice());
+            oi.setOriginalPrice(item.getOriginalPrice());
             oi.setQuantity(item.getQuantity());
             oi.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
             orderItemMapper.insert(oi);

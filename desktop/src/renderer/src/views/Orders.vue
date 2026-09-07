@@ -198,12 +198,12 @@ const totalRevenue = computed(() =>
           总营收 <strong class="text-on-surface dark:text-inverse-on-surface font-body">¥{{ totalRevenue.toFixed(2)
             }}</strong>
         </span>
-        <div class="relative">
-          <Icon icon="mdi:magnify" width="16"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 dark:text-gray-500" />
-          <input v-model="searchQuery" type="text" placeholder="搜索订单号..."
-            class="w-52 h-9 pl-9 pr-3 rounded-xl bg-surface dark:bg-[#1a1a1a] text-sm text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant/40 dark:placeholder:text-gray-600 font-body" @input="onSearchInput" />
-        </div>
+        <n-input v-model:value="searchQuery" placeholder="搜索订单号..." clearable style="width:220px"
+          @update:value="onSearchInput">
+          <template #prefix>
+            <Icon icon="mdi:magnify" class="text-on-surface-variant/40 dark:text-gray-500" />
+          </template>
+        </n-input>
       </div>
     </div>
 
@@ -289,8 +289,15 @@ const totalRevenue = computed(() =>
                       ¥{{
                         (item.subtotal || item.price * item.quantity).toFixed(2) }}</div>
                   </div>
-                  <div class="text-xs text-on-surface-variant dark:text-gray-400 mt-1">单价：¥
-                    <span class="font-bold">{{ item.price }}</span>
+                  <div class="text-xs text-on-surface-variant dark:text-gray-400 mt-1">
+                    <template v-if="item.originalPrice != null && Number(item.originalPrice) !== Number(item.price)">
+                      <span class="line-through mr-1">原价 ¥{{ Number(item.originalPrice).toFixed(2) }}</span>
+                      <span class="px-1 py-px rounded text-[10px] font-semibold bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400">改价</span>
+                      <span class="text-red-600 dark:text-red-400 font-bold ml-1">¥{{ Number(item.price).toFixed(2) }}</span>
+                    </template>
+                    <template v-else>
+                      单价：<span class="font-bold">¥{{ Number(item.price).toFixed(2) }}</span>
+                    </template>
                   </div>
                   <div class="flex items-center gap-2 mt-0.5">
                     <div class="text-xs" :class="item.refundedQty > 0

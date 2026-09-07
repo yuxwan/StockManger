@@ -17,6 +17,9 @@ public class OrderCreateDTO {
     /** 折扣百分比（如 80 表示打八折，收 80%），可为 null */
     private BigDecimal discount;
 
+    /** 实际销售员ID（可选，默认取当前登录人） */
+    private Long saleByUserId;
+
     private String remark;
 
     @NotNull
@@ -32,6 +35,9 @@ public class OrderCreateDTO {
 
         @NotNull
         private BigDecimal price;
+
+        /** 改价前原价（可选，用于标记临时特价） */
+        private BigDecimal originalPrice;
 
         @NotNull
         private Integer quantity;

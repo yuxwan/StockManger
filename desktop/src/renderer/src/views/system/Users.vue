@@ -197,12 +197,12 @@ onMounted(() => {
         <p class="text-sm text-on-surface-variant dark:text-gray-400 font-body mt-1">管理系统用户账号和角色分配</p>
       </div>
       <div class="flex items-center gap-3">
-        <div class="relative">
-          <Icon icon="mdi:magnify" width="16"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 dark:text-gray-500" />
-          <input v-model="searchQuery" type="text" placeholder="搜索用户名..."
-            class="w-52 h-9 pl-9 pr-3 rounded-xl bg-surface dark:bg-[#1a1a1a] text-sm text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant/40 dark:placeholder:text-gray-600 font-body" @input="onSearchInput" />
-        </div>
+        <n-input v-model:value="searchQuery" placeholder="搜索用户名..." clearable style="width:220px"
+          @update:value="onSearchInput">
+          <template #prefix>
+            <Icon icon="mdi:magnify" class="text-on-surface-variant/40 dark:text-gray-500" />
+          </template>
+        </n-input>
         <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex items-center gap-1.5" @click="openCreate">
           <Icon icon="mdi:plus" width="16" /> 新增用户
         </button>

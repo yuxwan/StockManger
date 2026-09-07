@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
@@ -18,5 +21,12 @@ public class ReportController {
     @GetMapping("/summary")
     public ResponseEntity<ReportSummaryDTO> summary(@RequestParam(defaultValue = "week") String dateRange) {
         return ResponseEntity.ok(reportService.getSummary(dateRange));
+    }
+
+    /** 按员工统计销售额（分红用） */
+    @GetMapping("/staff-summary")
+    public ResponseEntity<List<Map<String, Object>>> staffSummary(
+            @RequestParam(defaultValue = "month") String dateRange) {
+        return ResponseEntity.ok(reportService.getStaffSummary(dateRange));
     }
 }

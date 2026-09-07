@@ -66,6 +66,9 @@ export const orderApi = {
 export const reportApi = {
   summary(dateRange) {
     return request.get('/reports/summary', { params: { dateRange } })
+  },
+  staffSummary(dateRange) {
+    return request.get('/reports/staff-summary', { params: { dateRange } })
   }
 }
 
@@ -90,6 +93,10 @@ export const userApi = {
 export const systemUserApi = {
   list() {
     return request.get('/system/users')
+  },
+  /** 收银员列表（收银台可切换的销售员） */
+  cashiers() {
+    return request.get('/system/users/cashiers')
   },
   search(keyword = '', page = 1, pageSize = 20) {
     return request.get('/system/users/search', { params: { keyword, page, pageSize } })

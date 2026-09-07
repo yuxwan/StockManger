@@ -49,6 +49,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         StpUtil.login(user.getId());
         Map<String, Object> result = new HashMap<>();
         result.put("token", StpUtil.getTokenValue());
+        result.put("userId", user.getId());
         String role = getUserRoleCode(user.getId());
         result.put("role", role != null ? role : (user.getRole() != null ? user.getRole() : "cashier"));
         result.put("username", user.getUsername());

@@ -77,6 +77,7 @@ const defaultMenuOptions = [
   { key: '/dashboard', icon: renderIcon('mdi:view-dashboard-outline'), label: '仪表盘' },
   { key: '/products', icon: renderIcon('mdi:package-variant-closed'), label: '商品管理' },
   { key: '/orders', icon: renderIcon('mdi:receipt-text-outline'), label: '订单管理' },
+  { key: '/performance', icon: renderIcon('mdi:chart-donut'), label: '员工业绩' },
   { key: '/operations', icon: renderIcon('mdi:clipboard-text-clock-outline'), label: '操作日志' }
 ]
 

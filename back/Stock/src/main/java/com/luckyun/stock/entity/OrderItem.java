@@ -23,6 +23,9 @@ public class OrderItem {
     /** 单价（快照） */
     private BigDecimal price;
 
+    /** 改价前原价（快照，临时特价时才有值） */
+    private BigDecimal originalPrice;
+
     /** 数量 */
     private Integer quantity;
 

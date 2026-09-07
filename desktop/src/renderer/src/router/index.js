@@ -7,6 +7,7 @@ import Dashboard from '../views/Dashboard.vue'
 import Products from '../views/Products.vue'
 import AddProduct from '../views/AddProduct.vue'
 import Orders from '../views/Orders.vue'
+import Performance from '../views/Performance.vue'
 import Operations from '../views/Operations.vue'
 import Settings from '../views/Settings.vue'
 import Users from '../views/system/Users.vue'
@@ -27,6 +28,7 @@ const routes = [
       { path: 'products/add', name: 'add-product', component: AddProduct },
       { path: 'products/edit/:id', name: 'edit-product', component: AddProduct, props: true },
       { path: 'orders', name: 'orders', component: Orders },
+      { path: 'performance', name: 'performance', component: Performance },
       { path: 'operations', name: 'operations', component: Operations },
       { path: 'settings', name: 'settings', component: Settings },
       { path: 'users', name: 'users', component: Users },

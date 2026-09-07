@@ -32,6 +32,7 @@ async function login() {
   try {
     const res = await authApi.login({ username: username.value, password: password.value })
     localStorage.setItem('token', res.token)
+    if (res.userId) localStorage.setItem('userId', res.userId)
     if (res.role) localStorage.setItem('userRole', res.role)
     if (res.username) localStorage.setItem('userName', res.username)
     if (res.nickname) localStorage.setItem('userNickname', res.nickname)

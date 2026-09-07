@@ -132,18 +132,18 @@ const productColumns = computed(() => {
     { title: '存放位置', key: 'location', minWidth: 100 },
     { title: '有效期', key: 'expiry', minWidth: 120 },
     {
-      title: '销售价', key: 'price', className: 'text-right', minWidth: 90,
+      title: '销售价', key: 'price', minWidth: 90,
       render(row) { return h('span', '¥' + row.price) }
     }
   ]
   if (!isCashier) {
     cols.push({
-      title: '进货价', key: 'purchasePrice', className: 'text-right', minWidth: 90,
+      title: '进货价', key: 'purchasePrice', minWidth: 90,
       render(row) { return h('span', row.purchasePrice ? '¥' + row.purchasePrice : '-') }
     })
   }
   cols.push({
-    title: '库存', key: 'stock', className: 'text-right', minWidth: 90,
+    title: '库存', key: 'stock', minWidth: 90,
     render(row) {
       const isLow = row.stock < lowStockThreshold
       return h('span', {
@@ -153,44 +153,34 @@ const productColumns = computed(() => {
   })
   if (!isCashier) {
     cols.push({
-      title: '小计', key: 'subtotal', className: 'text-right', minWidth: 100,
+      title: '小计', key: 'subtotal', minWidth: 100,
       render(row) { return h('span', '¥' + ((row.purchasePrice || row.price) * row.stock).toLocaleString()) }
     })
   }
   cols.push({
-    title: '操作', key: 'actions', width: 260, fixed: 'right',
+    title: '操作', key: 'actions', width: 250, fixed: 'right',
     render(row) {
       return h('div', { class: 'inline-flex items-center gap-0.5' }, [
         h('button', {
-          class: 'inline-flex items-center gap-0.5 px-1.5 py-1 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10',
+          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10',
           title: '入库',
           onClick: () => openStockDialog(row, 'in')
-        }, [
-          h(Icon, { icon: 'mdi:plus-circle-outline', width: 14 }),
-          '入库'
-        ]),
+        }, [h(Icon, { icon: 'mdi:plus-circle-outline', width: 14 }), '入库']),
         h('button', {
-          class: 'inline-flex items-center gap-0.5 px-1.5 py-1 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10',
+          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10',
           title: '出库',
           onClick: () => openStockDialog(row, 'out')
-        }, [
-          h(Icon, { icon: 'mdi:minus-circle-outline', width: 14 }),
-          '出库'
-        ]),
+        }, [h(Icon, { icon: 'mdi:minus-circle-outline', width: 14 }), '出库']),
         h('button', {
-          class: 'inline-flex items-center gap-0.5 px-1.5 py-1 rounded-lg text-xs font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10',
+          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/10 dark:hover:bg-white/10',
+          title: '编辑',
           onClick: () => router.push('/products/edit/' + row.id)
-        }, [
-          h(Icon, { icon: 'mdi:pencil-outline', width: 14 }),
-          '编辑'
-        ]),
+        }, [h(Icon, { icon: 'mdi:pencil-outline', width: 14 }), '编辑']),
         h('button', {
-          class: 'inline-flex items-center gap-0.5 px-1.5 py-1 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-500/10',
+          class: 'inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-500/10',
+          title: '删除',
           onClick: () => handleDelete(row)
-        }, [
-          h(Icon, { icon: 'mdi:delete-outline', width: 14 }),
-          '删除'
-        ])
+        }, [h(Icon, { icon: 'mdi:delete-outline', width: 14 }), '删除'])
       ])
     }
   })
@@ -342,7 +332,7 @@ function doPrint() {
           <span class="text-sm font-body">暂无商品</span>
         </div>
         <div v-else>
-          <n-data-table :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1200" :loading="searchLoading" />
+          <n-data-table :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1320" :loading="searchLoading" />
         </div>
       </n-card>
 

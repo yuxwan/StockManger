@@ -57,7 +57,10 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> create(@RequestBody OrderCreateDTO dto) {
-        long userId = StpUtil.getLoginIdAsLong();
+        // 若指定了销售员则用指定的人，否则归属当前登录人
+        long userId = dto.getSaleByUserId() != null
+                ? dto.getSaleByUserId()
+                : StpUtil.getLoginIdAsLong();
         return ResponseEntity.ok(orderService.createOrder(dto, userId));
     }
 

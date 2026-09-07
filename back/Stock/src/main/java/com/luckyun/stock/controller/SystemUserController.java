@@ -5,7 +5,11 @@ import cn.dev33.satoken.secure.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luckyun.stock.dto.UserCreateDTO;
+import com.luckyun.stock.entity.Role;
 import com.luckyun.stock.entity.User;
+import com.luckyun.stock.entity.UserRole;
+import com.luckyun.stock.mapper.RoleMapper;
+import com.luckyun.stock.mapper.UserRoleMapper;
 import com.luckyun.stock.service.RoleService;
 import com.luckyun.stock.service.UserService;
 import jakarta.validation.Valid;
@@ -14,8 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,6 +29,8 @@ public class SystemUserController {
 
     private final UserService userService;
     private final RoleService roleService;
+    private final RoleMapper roleMapper;
+    private final UserRoleMapper userRoleMapper;
 
     @GetMapping("/search")
     public ResponseEntity<Page<User>> search(
@@ -47,6 +52,36 @@ public class SystemUserController {
     public ResponseEntity<List<User>> list() {
         List<User> users = userService.list();
         // 不返回密码
+        users.forEach(u -> u.setPassword(null));
+        return ResponseEntity.ok(users);
+    }
+
+    /**
+     * 收银员列表（收银台可切换的销售员）。
+     * 规则：关联了 role.code = cashier 的角色，或 User.role 兜底字段为 cashier，
+     * 且账号启用。管理员/超级管理员不参与收银。
+     */
+    @GetMapping("/cashiers")
+    public ResponseEntity<List<User>> cashiers() {
+        Set<Long> ids = new HashSet<>();
+
+        List<Role> roles = roleMapper.selectList(new LambdaQueryWrapper<Role>()
+                .eq(Role::getCode, "cashier"));
+        if (roles != null && !roles.isEmpty()) {
+            List<Long> roleIds = roles.stream().map(Role::getId).collect(Collectors.toList());
+            userRoleMapper.selectList(new LambdaQueryWrapper<UserRole>()
+                            .in(UserRole::getRoleId, roleIds))
+                    .forEach(ur -> ids.add(ur.getUserId()));
+        }
+        // 兼容 User.role 字段兜底
+        userService.lambdaQuery().eq(User::getRole, "cashier")
+                .list().forEach(u -> ids.add(u.getId()));
+
+        if (ids.isEmpty()) return ResponseEntity.ok(List.of());
+
+        List<User> users = userService.listByIds(ids).stream()
+                .filter(u -> u.getStatus() == null || u.getStatus() == 1)
+                .collect(Collectors.toList());
         users.forEach(u -> u.setPassword(null));
         return ResponseEntity.ok(users);
     }
