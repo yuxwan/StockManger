@@ -28,7 +28,15 @@ Page({
     expiryTypes: EXPIRY_TYPES,
     submitting: false,
     scanning: false,
-    deleting: false
+    deleting: false,
+    // OCR 文字块选择弹框
+    ocrChars: [],       // 扁平化字符数组 [{text, selected}]
+    ocrLinesShow: false,
+    ocrFullText: '',
+    ocrStartIndex: -1,  // 滑动选择起始字符索引
+    ocrCurrentIndex: -1,
+    ocrDragging: false, // 是否处于滑动选择状态
+    charPositions: []   // 每个字符的屏幕位置
   },
 
   onLoad(options) {
@@ -119,8 +127,223 @@ Page({
     }
   },
 
-  // 名称行扫码：扫条码/二维码上的文字填入商品名称
+  // 名称扫码：直接拍照/选图 OCR 识别文字
   scanName() {
+    this.ocrName()
+  },
+
+  // OCR 拍照识别文字（调后端 Tesseract 接口）
+  ocrName() {
+    if (this.data.scanning) return
+    this.setData({ scanning: true })
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera', 'album'],
+      sizeType: ['compressed'],
+      success: (res) => {
+        const filePath = res.tempFiles[0].tempFilePath
+        wx.showLoading({ title: '识别中…' })
+        const { BASE_URL } = require('../../config')
+        const token = wx.getStorageSync('token')
+        wx.uploadFile({
+          url: BASE_URL + 'ocr',
+          filePath: filePath,
+          name: 'file',
+          header: token ? { Authorization: token } : {},
+          success: (r) => {
+            try {
+              const data = JSON.parse(r.data)
+              const text = data && data.data ? data.data.text : ''
+              const lines = data && data.data ? (data.data.lines || []) : []
+              if (lines.length > 0) {
+                // 把所有文字行扁平化成单字数组，行与行之间插入换行标记
+                const chars = []
+                lines.forEach((line, rowIdx) => {
+                  for (const ch of line) {
+                    chars.push({ text: ch, selected: false, isBreak: false })
+                  }
+                  // 行末插入换行标记（最后一行不加）
+                  if (rowIdx < lines.length - 1) {
+                    chars.push({ text: '', selected: false, isBreak: true })
+                  }
+                })
+                this.setData({
+                  ocrChars: chars,
+                  ocrFullText: text,
+                  ocrLinesShow: true
+                }, () => {
+                  // 等弹框渲染完成后再获取字符位置
+                  setTimeout(() => this.loadCharPositions(), 150)
+                })
+              } else if (text) {
+                this.setData({ 'form.name': text })
+                wx.showToast({ title: '识别成功', icon: 'success' })
+              } else {
+                wx.showToast({ title: '未识别到文字', icon: 'none' })
+              }
+            } catch (e) {
+              wx.showToast({ title: '识别失败，请重试', icon: 'none' })
+            }
+          },
+          fail: () => {
+            wx.showToast({ title: '网络错误，请重试', icon: 'none' })
+          },
+          complete: () => {
+            wx.hideLoading()
+            this.setData({ scanning: false })
+          }
+        })
+      },
+      fail: () => this.setData({ scanning: false })
+    })
+  },
+
+  // 空方法，用于 catchtap 阻止事件冒泡
+  noop() {},
+
+  // 获取每个字符（含换行标记）的屏幕位置，索引与 ocrChars 对齐
+  loadCharPositions() {
+    wx.createSelectorQuery()
+      .selectAll('.ocr-char, .ocr-break')
+      .boundingClientRect(rects => {
+        this.setData({ charPositions: rects || [] })
+      })
+      .exec()
+  },
+
+  // 根据触摸坐标找到最近的字符索引（不要求精确命中）
+  findCharByPos(x, y) {
+    const positions = this.data.charPositions
+    const ocrChars = this.data.ocrChars
+    if (!positions || positions.length === 0) return -1
+    let nearest = -1
+    let minDist = Infinity
+    for (let i = 0; i < positions.length && i < ocrChars.length; i++) {
+      const r = positions[i]
+      if (!r || ocrChars[i].isBreak) continue
+      // 计算触摸点到字符矩形的最近距离
+      let dx = 0, dy = 0
+      if (x < r.left) dx = r.left - x
+      else if (x > r.right) dx = x - r.right
+      if (y < r.top) dy = r.top - y
+      else if (y > r.bottom) dy = y - r.bottom
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist < minDist) {
+        minDist = dist
+        nearest = i
+      }
+    }
+    // 距离过远（超过 100px）认为没命中
+    return minDist < 100 ? nearest : -1
+  },
+
+  // 选中从 start 到 end 之间的所有字符（跳过换行标记）
+  selectRange(start, end) {
+    if (start < 0 || end < 0) return
+    const [s, e] = start <= end ? [start, end] : [end, start]
+    const chars = this.data.ocrChars.map((c, i) => ({
+      ...c,
+      selected: !c.isBreak && i >= s && i <= e
+    }))
+    this.setData({ ocrChars: chars })
+  },
+
+  // 清空所有选中
+  clearSelection() {
+    const chars = this.data.ocrChars.map(c => ({ ...c, selected: false }))
+    this.setData({ ocrChars: chars })
+  },
+
+  // 触摸开始：仅记录起始位置，不清空选择（点击和滑动区分处理）
+  onOcrTouchStart(e) {
+    // 触摸开始时刷新字符位置，确保准确
+    this.loadCharPositions()
+    const touch = e.touches[0]
+    const idx = this.findCharByPos(touch.clientX, touch.clientY)
+    this.setData({ ocrStartIndex: idx, ocrCurrentIndex: idx, ocrDragging: false })
+  },
+
+  // 触摸滑动：进入滑动模式，清空并选择范围
+  onOcrTouchMove(e) {
+    if (this.data.ocrStartIndex < 0) return
+    if (!this.data.ocrDragging) {
+      // 第一次滑动：清空已有选择，进入范围选择模式
+      this.setData({ ocrDragging: true })
+      this.clearSelection()
+    }
+    const touch = e.touches[0]
+    const idx = this.findCharByPos(touch.clientX, touch.clientY)
+    if (idx >= 0 && idx !== this.data.ocrCurrentIndex) {
+      this.setData({ ocrCurrentIndex: idx })
+      this.selectRange(this.data.ocrStartIndex, idx)
+    }
+  },
+
+  // 触摸结束
+  onOcrTouchEnd() {
+    // 保留当前选中
+  },
+
+  // 点击单个字符：切换选中（滑动模式下不触发）
+  onCharTap(e) {
+    if (this.data.ocrDragging) return
+    const idx = e.currentTarget.dataset.index
+    const chars = [...this.data.ocrChars]
+    if (chars[idx].isBreak) return
+    chars[idx] = { ...chars[idx], selected: !chars[idx].selected }
+    this.setData({ ocrChars: chars })
+  },
+
+  // 获取已选中的文字
+  getSelectedText() {
+    return this.data.ocrChars
+      .filter(c => c.selected && !c.isBreak)
+      .map(c => c.text)
+      .join('')
+  },
+
+  // 使用选中的文字填入商品名
+  useSelectedText() {
+    const text = this.getSelectedText()
+    if (text) {
+      this.setData({
+        'form.name': text,
+        ocrLinesShow: false,
+        ocrChars: [],
+        ocrStartIndex: -1,
+        ocrCurrentIndex: -1
+      })
+      wx.showToast({ title: '已填入', icon: 'success' })
+    } else {
+      wx.showToast({ title: '请先选择文字', icon: 'none' })
+    }
+  },
+
+  // 使用全部识别文字
+  useAllOcrText() {
+    this.setData({
+      'form.name': this.data.ocrFullText,
+      ocrLinesShow: false,
+      ocrChars: [],
+      ocrStartIndex: -1,
+      ocrCurrentIndex: -1
+    })
+    wx.showToast({ title: '已填入', icon: 'success' })
+  },
+
+  // 关闭 OCR 文字块弹框
+  closeOcrLines() {
+    this.setData({
+      ocrLinesShow: false,
+      ocrChars: [],
+      ocrStartIndex: -1,
+      ocrCurrentIndex: -1
+    })
+  },
+
+  // 扫条码/二维码取内容
+  scanNameByCode() {
     if (this.data.scanning) return
     this.setData({ scanning: true })
     wx.scanCode({

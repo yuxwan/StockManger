@@ -49,7 +49,6 @@
     <view style="display: flex; flex-direction: column; gap: 24rpx;">
       <view style="display: flex; align-items: center; justify-content: space-between;">
         <view style="font-weight: bold;">热销产品</view>
-        <view style="font-size: small; color: #999;">查看库存</view>
       </view>
       <view wx:if="{{top.length === 0}}" class="card" style="text-align: center; color: #999; font-size: small;">暂无热销数据</view>
       <view wx:for="{{top}}" wx:key="rank" class="card" style="display: flex; align-items: center; justify-content: space-between;">

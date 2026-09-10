@@ -4,5 +4,6 @@
     "t-divider": "tdesign-miniprogram/divider/divider"
   },
   "backgroundColor": "#fafafa",
-  "backgroundTextStyle": "dark"
+  "backgroundTextStyle": "dark",
+  "disableScroll": true
 }

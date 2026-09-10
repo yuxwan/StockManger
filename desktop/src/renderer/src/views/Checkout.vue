@@ -13,6 +13,20 @@ const cart = ref({})
 const payment = ref('wechat')
 const discount = ref(0)
 
+// ── 无图商品首字占位色（与小程序端一致） ──
+const THUMB_COLORS = [
+  { bg: '#fef3c7', fg: '#b45309' },
+  { bg: '#fee2e2', fg: '#b91c1c' },
+  { bg: '#dcfce7', fg: '#15803d' },
+  { bg: '#dbeafe', fg: '#1d4ed8' },
+  { bg: '#f3e8ff', fg: '#7e22ce' },
+  { bg: '#ffe4e6', fg: '#be123c' }
+]
+function thumbStyle(idx) {
+  const c = THUMB_COLORS[idx % THUMB_COLORS.length]
+  return { backgroundColor: c.bg, color: c.fg }
+}
+
 // ── 销售员（默认当前登录人，可临时切换） ──
 const staffList = ref([])
 const currentStaffId = ref(Number(localStorage.getItem('userId')) || null)
@@ -102,18 +116,39 @@ async function addProductByBarcode(code) {
 }
 
 
+// 判断是否为临时商品（负 id 占位，无库存限制）
+function isTempItem(item) {
+  return item && item.id < 0
+}
+
 function addToCart(product) {
+  // 真实商品库存为 0 时不允许添加
+  if (!isTempItem(product) && (product.stock || 0) <= 0) {
+    message.warning(`「${product.name}」已售罄`)
+    return
+  }
   if (!cart.value[product.id]) {
     // 记录原价，用于标识“已改价”的临时特价商品
     cart.value[product.id] = { ...product, qty: 1, origPrice: product.price, modified: false }
   } else {
-    cart.value[product.id].qty++
+    const item = cart.value[product.id]
+    // 真实商品不能超过库存
+    if (!isTempItem(item) && item.qty >= (item.stock || 0)) {
+      message.warning(`「${item.name}」库存不足（仅剩 ${item.stock} ${item.unit || '件'}）`)
+      return
+    }
+    item.qty++
   }
 }
 
 function updateQty(id, delta) {
   const item = cart.value[id]
   if (!item) return
+  // 真实商品不能超过库存
+  if (delta > 0 && !isTempItem(item) && item.qty >= (item.stock || 0)) {
+    message.warning(`「${item.name}」库存不足（仅剩 ${item.stock} ${item.unit || '件'}）`)
+    return
+  }
   item.qty += delta
   if (item.qty <= 0) {
     delete cart.value[id]
@@ -121,12 +156,43 @@ function updateQty(id, delta) {
 }
 
 function handleQtyInput(id, val) {
+  const item = cart.value[id]
+  if (!item) return
   if (val === null || val === undefined) return
   if (val <= 0) {
     delete cart.value[id]
   } else {
-    cart.value[id].qty = val
+    // 真实商品不能超过库存
+    if (!isTempItem(item) && val > (item.stock || 0)) {
+      message.warning(`「${item.name}」库存不足（仅剩 ${item.stock} ${item.unit || '件'}）`)
+      item.qty = item.stock || 0
+      return
+    }
+    item.qty = val
   }
+}
+
+// ── 临时商品（未入库，直接录入名称/单价/数量结算） ──
+const tmpShow = ref(false)
+const tmpForm = ref({ name: '', price: '', qty: 1 })
+
+function openTmp() {
+  tmpForm.value = { name: '', price: '', qty: 1 }
+  tmpShow.value = true
+}
+
+function addTmpProduct() {
+  const name = String(tmpForm.value.name || '').trim()
+  const price = Number(tmpForm.value.price)
+  let qty = parseInt(tmpForm.value.qty, 10)
+  if (!name) { message.warning('请输入商品名称'); return }
+  if (!price || price <= 0) { message.warning('请输入正确的单价'); return }
+  if (!qty || qty < 1) qty = 1
+  // 临时商品用负 id 占位，避免与真实商品 id 冲突
+  const tmpId = -Date.now()
+  cart.value[tmpId] = { id: tmpId, name, price, qty, origPrice: price, modified: false, barcode: '', spec: '', unit: '件' }
+  tmpShow.value = false
+  message.success(`已添加：${name}`)
 }
 
 // ── 临时改价（仅本单生效，不改商品库价格） ──
@@ -200,19 +266,36 @@ const total = computed(() => {
             <span>已选 {{ totalCount }} 件</span>
           </div>
         </div>
-        <n-input v-model:value="searchQuery" placeholder="搜索商品..." clearable @update:value="onSearchInput">
-          <template #prefix>
-            <Icon icon="mdi:magnify" class="text-on-surface-variant/40 dark:text-gray-500" />
-          </template>
-        </n-input>
-        <div class="grid gap-2 flex-1 overflow-auto min-h-0 pr-1 content-start" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr))">
-          <button v-for="p in products" :key="p.id"
-            class="flex items-center justify-between gap-2 p-3 rounded-lg bg-surface dark:bg-[#1a1a1a] hover:bg-black/5 dark:hover:bg-white/5 min-w-0"
+        <div class="flex items-center gap-2">
+          <n-input v-model:value="searchQuery" placeholder="搜索商品..." clearable @update:value="onSearchInput" class="flex-1">
+            <template #prefix>
+              <Icon icon="mdi:magnify" class="text-on-surface-variant/40 dark:text-gray-500" />
+            </template>
+          </n-input>
+          <button class="h-9 px-3 rounded-lg text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity flex items-center gap-1.5 shrink-0" @click="openTmp">
+            <Icon icon="mdi:plus" width="16" />
+            临时商品
+          </button>
+        </div>
+        <div class="grid gap-2 flex-1 overflow-auto min-h-0 pr-1 content-start" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))">
+          <button v-for="(p, idx) in products" :key="p.id"
+            class="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface dark:bg-[#1a1a1a] hover:bg-black/5 dark:hover:bg-white/5 min-w-0 text-left transition-colors"
             @click="addToCart(p)">
-            <span
-              class="font-body font-semibold text-sm text-on-surface dark:text-inverse-on-surface truncate min-w-0 flex-1 text-left">{{
-                p.name }}</span>
-            <span class="text-xs text-on-surface-variant dark:text-gray-400 shrink-0 font-mono">¥{{ p.price }}</span>
+            <img v-if="p.image" :src="p.image" :alt="p.name"
+              class="w-11 h-11 rounded-lg object-cover shrink-0 bg-black/5 dark:bg-white/10" />
+            <div v-else class="w-11 h-11 rounded-lg shrink-0 flex items-center justify-center text-base font-bold select-none"
+              :style="thumbStyle(idx)">{{ (p.name || '品').charAt(0) }}</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-body font-semibold text-sm text-on-surface dark:text-inverse-on-surface truncate leading-tight">{{ p.name }}</div>
+              <div class="text-xs text-on-surface-variant/60 dark:text-gray-500 truncate leading-tight mt-0.5">{{ p.spec || '—' }}</div>
+              <div class="flex items-center justify-between mt-1">
+                <span class="text-xs font-mono font-semibold text-on-surface dark:text-inverse-on-surface">¥{{ p.price }}</span>
+                <span class="text-[11px] font-medium"
+                  :class="p.stock <= 0 ? 'text-red-500' : p.stock <= 10 ? 'text-amber-600 dark:text-amber-400' : 'text-on-surface-variant/50 dark:text-gray-500'">
+                  {{ p.stock <= 0 ? '售罄' : '库存 ' + p.stock + (p.unit || '') }}
+                </span>
+              </div>
+            </div>
           </button>
         </div>
 
@@ -293,6 +376,7 @@ const total = computed(() => {
                 :value="item.qty"
                 size="small"
                 :min="0"
+                :max="item.id < 0 ? undefined : item.stock"
                 style="width:56px"
                 :show-button="false"
                 @update:value="(val) => handleQtyInput(item.id, val)"
@@ -363,5 +447,34 @@ const total = computed(() => {
         </button>
       </div>
     </n-card>
+
+    <!-- 添加临时商品弹窗 -->
+    <n-modal :show="tmpShow" :mask-closable="true" transform-origin="center"
+      :on-update:show="(v) => { if (!v) tmpShow = false }">
+      <div class="relative w-[380px] rounded-2xl bg-surface dark:bg-[#252525] p-6 shadow-xl border border-outline-variant/20 dark:border-[#333]">
+        <h3 class="text-base font-body font-bold text-on-surface dark:text-inverse-on-surface">添加临时商品</h3>
+        <p class="mt-1 text-sm font-body text-on-surface-variant dark:text-gray-400">未录入商品库的商品，仅本单结算生效</p>
+        <div class="mt-4 flex flex-col gap-4">
+          <div>
+            <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">商品名称</label>
+            <n-input v-model:value="tmpForm.name" placeholder="请输入商品名称" clearable @keyup.enter="addTmpProduct" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">单价（元）</label>
+              <n-input-number v-model:value="tmpForm.price" placeholder="0" :min="0" clearable style="width:100%" />
+            </div>
+            <div>
+              <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">数量</label>
+              <n-input-number v-model:value="tmpForm.qty" :min="1" clearable style="width:100%" />
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 mt-6">
+          <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors" @click="tmpShow = false">取消</button>
+          <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity" @click="addTmpProduct">添加</button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>

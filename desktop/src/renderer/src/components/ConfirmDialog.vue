@@ -6,8 +6,8 @@
       class="relative rounded-2xl bg-surface dark:bg-[#252525] shadow-xl border border-outline-variant/20 dark:border-[#333]"
       :style="{ width }"
     >
-      <button @click="onCancel"
-        class="absolute top-4 right-4 z-[1] w-7 h-7 flex items-center justify-center rounded-lg text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+      <button @click="onCancel" :disabled="loading"
+        class="absolute top-4 right-4 z-[1] w-7 h-7 flex items-center justify-center rounded-lg text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"/>
@@ -42,19 +42,28 @@
       </div>
       <div v-else-if="!hideDefaultFooter" class="flex items-center justify-end gap-2 px-6 pb-6 pt-4">
         <button
-          class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="loading"
           @click="onCancel"
         >{{ cancelText }}</button>
         <button
           v-if="type === 'error'"
-          class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
+          class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+          :disabled="loading"
           @click="onConfirm"
-        >{{ confirmText }}</button>
+        >
+          <svg v-if="loading" class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          {{ confirmText }}
+        </button>
         <button
           v-else
-          class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity"
+          class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+          :disabled="loading"
           @click="onConfirm"
-        >{{ confirmText }}</button>
+        >
+          <svg v-if="loading" class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          {{ confirmText }}
+        </button>
       </div>
     </div>
   </n-modal>
@@ -70,7 +79,8 @@ const props = defineProps({
   width: { type: String, default: '360px' },
   type: { type: String, default: 'default' }, // 'default' | 'error'
   iconType: { type: String, default: '' }, // 'warning' | ''
-  hideDefaultFooter: { type: Boolean, default: false }
+  hideDefaultFooter: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:show', 'confirm'])

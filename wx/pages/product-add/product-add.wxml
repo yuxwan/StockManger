@@ -84,4 +84,28 @@
       删除商品
     </view>
   </view>
+
+  <!-- OCR 文字选择弹框 -->
+  <view wx:if="{{ocrLinesShow}}" class="ocr-mask" bindtap="closeOcrLines">
+    <view class="ocr-sheet" catchtap="noop" catch:touchmove="noop">
+      <view class="ocr-title">点击或滑动选择文字</view>
+      <view class="ocr-text"
+            catchtap="noop"
+            bindtouchstart="onOcrTouchStart"
+            catch:touchmove="onOcrTouchMove"
+            bindtouchend="onOcrTouchEnd">
+        <block wx:for="{{ocrChars}}" wx:key="index">
+          <view wx:if="{{item.isBreak}}" class="ocr-break"></view>
+          <view wx:else class="ocr-char {{item.selected ? 'selected' : ''}}"
+                data-index="{{index}}"
+                catchtap="onCharTap">{{item.text}}</view>
+        </block>
+      </view>
+      <view class="ocr-actions">
+        <view class="ocr-btn ocr-btn-ghost" catchtap="closeOcrLines">取消</view>
+        <view class="ocr-btn ocr-btn-ghost" catchtap="useAllOcrText">使用全部</view>
+        <view class="ocr-btn ocr-btn-primary" catchtap="useSelectedText">填入选中</view>
+      </view>
+    </view>
+  </view>
 </scroll-view>

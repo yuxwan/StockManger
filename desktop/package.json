@@ -1,6 +1,6 @@
 {
   "name": "desktop-app",
-  "version": "1.0.16",
+  "version": "1.0.19",
   "description": "Stock",
   "main": "./out/main/index.js",
   "scripts": {

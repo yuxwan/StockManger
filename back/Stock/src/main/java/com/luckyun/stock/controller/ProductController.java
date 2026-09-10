@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +65,7 @@ public class ProductController {
     public ResponseEntity<?> getByBarcode(@PathVariable String barcode) {
         Product product = productService.lambdaQuery()
                 .eq(Product::getBarcode, barcode).one();
-        if (product == null) return ResponseEntity.badRequest().body(Map.of("msg", "商品不存在"));
+        if (product == null) return ResponseEntity.ok(null);
         return ResponseEntity.ok(product);
     }
 
@@ -92,8 +94,11 @@ public class ProductController {
         }
 
         Product saved = productService.createProduct(product);
+        StringBuilder detail = new StringBuilder("新增商品").append("，");
+        detail.append("初始库存：").append(saved.getStock() != null ? saved.getStock() : 0)
+                .append(" ").append(saved.getUnit() != null ? saved.getUnit() : "件");
         operationLogService.log("CREATE_PRODUCT", "PRODUCT", saved.getId(), saved.getName(),
-                "新增商品", getOperatorName());
+                detail.toString(), getOperatorName());
         Map<String, Object> result = new HashMap<>();
         result.put("type", "create");
         result.put("product", saved);
@@ -107,10 +112,42 @@ public class ProductController {
         product.setId(id);
         productService.updateById(product);
         if (old != null) {
+            StringBuilder detail = new StringBuilder("编辑商品");
+            List<String> changes = new ArrayList<>();
+            appendChange(changes, "名称", old.getName(), product.getName());
+            appendChange(changes, "条码", old.getBarcode(), product.getBarcode());
+            appendChange(changes, "规格", old.getSpec(), product.getSpec());
+            appendChange(changes, "售价", old.getPrice(), product.getPrice());
+            appendChange(changes, "库存", old.getStock(), product.getStock());
+            appendChange(changes, "单位", old.getUnit(), product.getUnit());
+            appendChange(changes, "位置", old.getLocation(), product.getLocation());
+            appendChange(changes, "有效期", old.getExpiry(), product.getExpiry());
+            appendChange(changes, "图片", old.getImage(), product.getImage());
+            if (changes.isEmpty()) {
+                detail.append("（无字段变更）");
+            } else {
+                detail.append("：").append(String.join("；", changes));
+            }
             operationLogService.log("UPDATE_PRODUCT", "PRODUCT", id, product.getName(),
-                    "编辑商品（原名称：" + old.getName() + "）", getOperatorName());
+                    detail.toString(), getOperatorName());
         }
         return ResponseEntity.ok(product);
+    }
+
+    /** 对比新旧值，有变化则追加到变更列表 */
+    private void appendChange(List<String> changes, String fieldName, Object oldVal, Object newVal) {
+        // BigDecimal 用 compareTo 比较，避免 10.00 与 10 被误判为不同
+        if (oldVal instanceof BigDecimal && newVal instanceof BigDecimal) {
+            if (((BigDecimal) oldVal).compareTo((BigDecimal) newVal) != 0) {
+                changes.add(fieldName + "：" + oldVal + " → " + newVal);
+            }
+            return;
+        }
+        String oldStr = oldVal == null ? "" : String.valueOf(oldVal);
+        String newStr = newVal == null ? "" : String.valueOf(newVal);
+        if (!oldStr.equals(newStr)) {
+            changes.add(fieldName + "：" + (oldStr.isEmpty() ? "空" : oldStr) + " → " + (newStr.isEmpty() ? "空" : newStr));
+        }
     }
 
     @DeleteMapping("/{id}")

@@ -1,6 +1,8 @@
 {
-  "navigationBarTitleText": "出入库记录",
+  "navigationBarTitleText": "库存记录",
   "usingComponents": {},
   "backgroundColor": "#fafafa",
-  "backgroundTextStyle": "dark"
+  "backgroundTextStyle": "dark",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 80
 }

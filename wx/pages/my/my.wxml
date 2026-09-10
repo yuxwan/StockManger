@@ -27,14 +27,14 @@
         </view>
         <view class="menu-row" bindtap="goStockLog">
           <t-icon name="swap" color="#111111" size="40rpx" />
-          <text class="row-label">出入库记录</text>
+          <text class="row-label">库存记录</text>
           <t-icon class="row-arrow" name="chevron-right" color="#c4c4c8" size="34rpx" />
         </view>
-        <view class="menu-row" bindtap="comingSoon">
+        <!-- <view class="menu-row" bindtap="comingSoon">
           <t-icon name="shop" color="#111111" size="40rpx" />
           <text class="row-label">门店与员工</text>
           <t-icon class="row-arrow" name="chevron-right" color="#c4c4c8" size="34rpx" />
-        </view>
+        </view> -->
       </view>
     </view>
 

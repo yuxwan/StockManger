@@ -12,7 +12,7 @@ Page({
     tmpShow: false
   },
 
-  onLoad() {
+  onShow() {
     this.loadCart()
   },
 
@@ -51,6 +51,13 @@ Page({
 
   inc(e) {
     const idx = e.currentTarget.dataset.idx
+    const item = this.data.items[idx]
+    if (!item) return
+    // 真实商品（id >= 0）不能超过库存；临时商品无限制
+    if (item.id >= 0 && item.stock !== undefined && item.qty >= item.stock) {
+      wx.showToast({ title: `库存仅剩 ${item.stock}`, icon: 'none' })
+      return
+    }
     const items = this.data.items.map((i, n) => (n === idx ? { ...i, qty: i.qty + 1 } : i))
     this.setData({ items })
     this.recalc()
@@ -80,6 +87,12 @@ Page({
     const items = this.data.items.slice()
     let qty = parseInt(items[idx].qty, 10)
     if (!qty || qty < 1) qty = 1
+    const it = items[idx]
+    // 真实商品不能超过库存
+    if (it.id >= 0 && it.stock !== undefined && qty > it.stock) {
+      qty = it.stock
+      wx.showToast({ title: `库存仅剩 ${it.stock}`, icon: 'none' })
+    }
     items[idx].qty = qty
     this.setData({ items })
     this.recalc()
@@ -135,9 +148,20 @@ Page({
   // 扫码即加购：同商品（同 id）合并数量
   addById(p) {
     if (!p) return
+    // 库存为 0 不允许加购
+    if (p.stock !== undefined && p.stock <= 0) {
+      wx.showToast({ title: '该商品已售罄', icon: 'none' })
+      return
+    }
+    const existing = this.data.items.find(i => i.id === p.id)
+    // 已在购物车且达到库存则提示
+    if (existing && p.stock !== undefined && existing.qty >= p.stock) {
+      wx.showToast({ title: `库存仅剩 ${p.stock}`, icon: 'none' })
+      return
+    }
     const items = this.data.items.map(i => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i))
     if (!items.some(i => i.id === p.id)) {
-      items.push({ id: p.id, name: p.name, price: Number(p.price) || 0, qty: 1 })
+      items.push({ id: p.id, name: p.name, spec: p.spec || '', price: Number(p.price) || 0, qty: 1, stock: p.stock })
     }
     this.setData({ items })
     this.recalc()
@@ -205,16 +229,31 @@ Page({
       wx.showToast({ title: '本单还没有商品', icon: 'none' })
       return
     }
+    wx.showActionSheet({
+      itemList: ['微信支付', '支付宝', '现金'],
+      success: (res) => {
+        const methods = ['wechat', 'alipay', 'cash']
+        this.doCheckout(methods[res.tapIndex])
+      }
+    })
+  },
+
+  async doCheckout(payment) {
+    const { items, totalText } = this.data
+    const labels = { wechat: '微信', alipay: '支付宝', cash: '现金' }
     wx.showModal({
       title: '确认收款',
-      content: '应收 ¥' + totalText + '\n以现金收款并生成订单？',
+      content: '应收 ¥' + totalText + '\n以' + labels[payment] + '收款并生成订单？',
       confirmText: '确认收款',
       confirmColor: '#111111',
       success: async (res) => {
         if (!res.confirm) return
         try {
+          wx.showLoading({
+            title: '结算中',
+          })
           const body = {
-            payment: 'cash',
+            payment,
             items: items.map(i => ({
               productId: i.id,
               productName: i.name,

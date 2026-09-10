@@ -14,7 +14,7 @@ const isEdit = computed(() => !!route.params.id)
 const submitting = ref(false)
 const uploadingImg = ref(false)
 const fileInput = ref(null)
-const form = ref({ barcode: '', name: '', spec: '', price: '', purchasePrice: '', stock: '', unit: '个', location: '', expiryType: 'days', expiryValue: '', expiryDate: null, image: '' })
+const form = ref({ barcode: '', name: '', spec: '', price: '', stock: '', unit: '个', location: '', expiryType: 'days', expiryValue: '', expiryDate: null, image: '' })
 const barcodeInput = ref(null)
 const expiryOptions = [
   { value: 'days', label: '按天' },
@@ -57,7 +57,6 @@ onMounted(async () => {
           name: product.name || '',
           spec: product.spec || '',
           price: product.price || '',
-          purchasePrice: product.purchasePrice || '',
           stock: product.stock || '',
           unit: product.unit || '个',
           location: product.location || '',
@@ -107,7 +106,6 @@ watch(() => form.value.barcode, (val) => {
         form.value.name = product.name || ''
         form.value.spec = product.spec || ''
         form.value.price = product.price || ''
-        form.value.purchasePrice = product.purchasePrice || ''
         form.value.unit = product.unit || '个'
         form.value.location = product.location || ''
       }
@@ -185,7 +183,7 @@ function removeImage() {
 }
 
 async function submit() {
-  const { barcode, name, spec, price, purchasePrice, stock, unit, location, expiryType, expiryValue, expiryDate } = form.value
+  const { barcode, name, spec, price, stock, unit, location, expiryType, expiryValue, expiryDate } = form.value
   if (!barcode) {
     message.warning('请填写条码或点击生成条码')
     return
@@ -209,7 +207,7 @@ async function submit() {
   } else if (expiryValue) {
     expiry = `${expiryValue}${{ days: 'D', months: 'M', years: 'Y' }[expiryType]}`
   }
-  const data = { barcode, name, spec, price: Number(price), purchasePrice: purchasePrice === '' ? null : Number(purchasePrice), stock: Number(stock), unit, location, expiry, image: form.value.image || '' }
+  const data = { barcode, name, spec, price: Number(price), stock: Number(stock), unit, location, expiry, image: form.value.image || '' }
   try {
     if (isEdit.value) {
       await productApi.update(route.params.id, data)
@@ -348,14 +346,10 @@ async function submit() {
           </div>
         </div>
 
-        <div class="grid gap-3" :class="isEdit ? 'grid-cols-4' : 'grid-cols-3'">
+        <div class="grid gap-3 grid-cols-3">
           <div>
             <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">销售价（元）</label>
             <n-input-number v-model:value="form.price" placeholder="0" :min="0" clearable style="width:100%" />
-          </div>
-          <div v-if="isEdit">
-            <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">进货价（元）</label>
-            <n-input-number v-model:value="form.purchasePrice" placeholder="0" :min="0" clearable style="width:100%" />
           </div>
           <div>
             <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">数量</label>

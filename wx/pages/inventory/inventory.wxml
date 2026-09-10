@@ -14,7 +14,7 @@
   </view>
 
   <!-- 商品列表（scroll-view，自带下拉刷新） -->
-  <scroll-view scroll-y class="inv-list" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh" style="flex: 1; min-height: 0;">
+  <scroll-view scroll-y class="inv-list" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh" bindscrolltolower="loadMore" lower-threshold="80" style="flex: 1; min-height: 0;">
     <view class="list-inner">
       <!-- 低库存预警汇总条 -->
       <view wx:if="{{soldOutCount > 0 || lowCount > 0}}" class="warn-bar">
@@ -33,6 +33,7 @@
       <view style="display: flex; flex-direction: column; gap: 24rpx;">
         <view wx:for="{{list}}" wx:key="id" class="row card" data-idx="{{index}}" bindtap="openRow">
           <image wx:if="{{item.image}}" class="row-thumb" src="{{item.image}}" mode="aspectFill" />
+          <view wx:else class="row-thumb row-thumb-text" style="background-color: {{item.thumbBg}}; color: {{item.thumbFg}};">{{item.thumb}}</view>
           <view class="row-main">
             <text class="row-name">{{item.name}}</text>
             <text class="row-sub">{{item.barcode || '无条码'}} · ¥{{item.price}}{{item.spec ? ' · ' + item.spec : ''}}</text>
@@ -46,6 +47,10 @@
           </view>
         </view>
       </view>
+
+      <!-- 上拉加载状态 -->
+      <view wx:if="{{loadingMore}}" class="load-tip">加载中…</view>
+      <view wx:elif="{{list.length > 0 && !hasMore}}" class="load-tip done">— 没有更多了 —</view>
     </view>
   </scroll-view>
 </view>
@@ -74,5 +79,30 @@
       <view class="s-btn ghost" bindtap="stockOut" disabled="{{changing}}">出库</view>
       <view class="s-btn solid" bindtap="stockIn" disabled="{{changing}}">入库</view>
     </view>
+
+    <!-- 加入收银台 -->
+    <view class="s-btn cart-btn" bindtap="addToPos">加入收银台</view>
   </view>
 </page-container>
+
+<!-- 自定义数量输入弹窗 -->
+<view wx:if="{{qtyModal.show}}" class="qty-mask" bindtap="closeQtyModal">
+  <view class="qty-card" catchtap="">
+    <view class="qty-title">{{qtyModal.title}}</view>
+    <input
+      class="qty-input"
+      type="number"
+      focus="{{qtyModal.show}}"
+      placeholder="{{qtyModal.placeholder}}"
+      value="{{qtyModal.value}}"
+      maxlength="6"
+      bindinput="onQtyModalInput"
+      bindconfirm="confirmQtyModal"
+      confirm-type="done"
+    />
+    <view class="qty-btns">
+      <view class="qty-btn cancel" bindtap="closeQtyModal">取消</view>
+      <view class="qty-btn confirm" bindtap="confirmQtyModal">确认</view>
+    </view>
+  </view>
+</view>

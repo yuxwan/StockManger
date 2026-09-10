@@ -8,7 +8,9 @@ import com.luckyun.stock.entity.Product;
 import com.luckyun.stock.mapper.OrderItemMapper;
 import com.luckyun.stock.mapper.OrderMapper;
 import com.luckyun.stock.mapper.ProductMapper;
+import com.luckyun.stock.service.OperationLogService;
 import com.luckyun.stock.service.OrderService;
+import com.luckyun.stock.service.UserService;
 import com.luckyun.stock.dto.OrderCreateDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final OrderItemMapper orderItemMapper;
     private final ProductMapper productMapper;
+    private final OperationLogService operationLogService;
+    private final UserService userService;
     private static final AtomicLong ORDER_SEQ = new AtomicLong(0);
+
+    /** 根据 userId 获取操作人显示名 */
+    private String getOperatorName(Long userId) {
+        if (userId == null) return "未知";
+        var user = userService.getById(userId);
+        return user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知";
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -64,10 +75,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         save(order);
 
         // 保存订单明细 + 扣减库存
+        String operatorName = getOperatorName(userId);
         for (OrderCreateDTO.Item item : dto.getItems()) {
+            // 临时商品（productId 为负或查不到）不关联真实商品，productId 置 null 避开外键约束
+            Product product = item.getProductId() != null ? productMapper.selectById(item.getProductId()) : null;
+
             OrderItem oi = new OrderItem();
             oi.setOrderId(order.getId());
-            oi.setProductId(item.getProductId());
+            oi.setProductId(product != null ? product.getId() : null);
             oi.setProductName(item.getProductName());
             oi.setPrice(item.getPrice());
             oi.setOriginalPrice(item.getOriginalPrice());
@@ -75,13 +90,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             oi.setSubtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
             orderItemMapper.insert(oi);
 
-            // 扣减库存
-            Product product = productMapper.selectById(item.getProductId());
+            // 扣减库存 + 记录出库日志（仅真实商品）
             if (product != null) {
-                product.setStock(product.getStock() - item.getQuantity());
+                int oldStock = product.getStock();
+                int newStock = oldStock - item.getQuantity();
+                product.setStock(newStock);
                 productMapper.updateById(product);
+                operationLogService.log("SALE", "PRODUCT", product.getId(), product.getName(),
+                        "收银出库 -" + item.getQuantity() + " " + (product.getUnit() != null ? product.getUnit() : "件")
+                                + "（订单：" + orderNo + "，库存：" + oldStock + " → " + newStock + "）",
+                        operatorName);
+            } else {
+                // 临时商品记录一条 SALE 日志，targetId 为 null
+                operationLogService.log("SALE", "PRODUCT", null, item.getProductName(),
+                        "临时商品出库 -" + item.getQuantity() + "（订单：" + orderNo + "）", operatorName);
             }
         }
+
+        // 记录订单创建日志
+        operationLogService.log("CREATE_ORDER", "ORDER", order.getId(), orderNo,
+                "收银下单 ¥" + finalTotal + "（" + dto.getPayment() + "，" + itemCount + " 种商品）", operatorName);
 
         return order;
     }
@@ -100,6 +128,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (order == null) throw new RuntimeException("订单不存在");
         if ("refunded".equals(order.getStatus())) throw new RuntimeException("订单已退款，请勿重复操作");
 
+        String operatorName = getOperatorName(order.getUserId());
+
         // 恢复库存 & 标记单品已退
         List<OrderItem> items = orderItemMapper.selectList(
                 new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id)
@@ -110,8 +140,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 if (product != null) {
                     int refundable = item.getQuantity() - (item.getRefundedQty() != null ? item.getRefundedQty() : 0);
                     if (refundable > 0) {
-                        product.setStock(product.getStock() + refundable);
+                        int oldStock = product.getStock();
+                        int newStock = oldStock + refundable;
+                        product.setStock(newStock);
                         productMapper.updateById(product);
+                        operationLogService.log("REFUND", "PRODUCT", product.getId(), product.getName(),
+                                "退款入库 +" + refundable + " " + (product.getUnit() != null ? product.getUnit() : "件")
+                                        + "（订单：" + order.getOrderNo() + "，库存：" + oldStock + " → " + newStock + "）",
+                                operatorName);
                     }
                 }
             }
@@ -137,12 +173,20 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         int refundable = item.getQuantity() - refunded;
         if (quantity <= 0 || quantity > refundable) throw new RuntimeException("退款数量不合法");
 
+        String operatorName = getOperatorName(order.getUserId());
+
         // 恢复库存
         if (item.getProductId() != null) {
             Product product = productMapper.selectById(item.getProductId());
             if (product != null) {
-                product.setStock(product.getStock() + quantity);
+                int oldStock = product.getStock();
+                int newStock = oldStock + quantity;
+                product.setStock(newStock);
                 productMapper.updateById(product);
+                operationLogService.log("REFUND", "PRODUCT", product.getId(), product.getName(),
+                        "退款入库 +" + quantity + " " + (product.getUnit() != null ? product.getUnit() : "件")
+                                + "（订单：" + order.getOrderNo() + "，库存：" + oldStock + " → " + newStock + "）",
+                        operatorName);
             }
         }
 

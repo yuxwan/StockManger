@@ -57,7 +57,7 @@ Page({
     wx.navigateTo({ url: '/pages/order/order' })
   },
 
-  /** 出入库记录 → 记录页 */
+  /** 库存记录 → 记录页 */
   goStockLog() {
     wx.navigateTo({ url: '/pages/stock-log/stock-log' })
   },

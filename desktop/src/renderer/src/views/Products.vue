@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, computed, h, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useMessage, NImage } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import JsBarcode from 'jsbarcode'
 import { productApi } from '../api'
@@ -44,6 +44,7 @@ function onSearchInput() {
 
 // ── 确认弹窗 ──
 const confirmShow = ref(false)
+const confirmLoading = ref(false)
 const confirmTitle = ref('')
 const confirmContent = ref('')
 let confirmCallback = null
@@ -55,9 +56,16 @@ function useConfirm(title, content, callback) {
   confirmShow.value = true
 }
 
-function onConfirmOk() {
-  confirmShow.value = false
-  confirmCallback?.()
+async function onConfirmOk() {
+  if (confirmLoading.value) return
+  confirmLoading.value = true
+  try {
+    const ret = confirmCallback?.()
+    if (ret && typeof ret.then === 'function') await ret
+  } finally {
+    confirmLoading.value = false
+    confirmShow.value = false
+  }
 }
 
 // ── 库存调整弹窗 ──
@@ -138,13 +146,21 @@ const isCashier = localStorage.getItem('userRole') === 'cashier'
 const productColumns = computed(() => {
   const cols = [
     {
-      title: '图', key: 'image', width: 56, align: 'center',
+      title: '商品图', key: 'image', width: 70, align: 'center',
       render(row) {
         if (!row.image) return h('div', { class: 'w-8 h-8 mx-auto rounded bg-black/5 dark:bg-white/10' })
-        return h('img', { src: row.image, class: 'w-8 h-8 mx-auto rounded object-cover', alt: row.name })
+        return h(NImage, {
+          src: row.image,
+          alt: row.name,
+          width: 32,
+          height: 32,
+          objectFit: 'cover',
+          class: 'rounded mx-auto',
+          fallbackSrc: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="%23f4f4f5"/></svg>'
+        })
       }
     },
-    { title: '条码', key: 'barcode', minWidth: 150 },
+    { title: '条码', key: 'barcode', minWidth: 180 },
     { title: '商品名称', key: 'name', minWidth: 150 },
     { title: '规格型号', key: 'spec', minWidth: 120 },
     { title: '存放位置', key: 'location', minWidth: 100 },
@@ -345,7 +361,7 @@ function doPrint() {
           <span class="text-sm font-body">暂无商品</span>
         </div>
         <div v-else class="flex-1 min-h-0">
-          <n-data-table flex-height :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1420"
+          <n-data-table flex-height :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1800"
             :loading="searchLoading" style="height:100%" />
         </div>
       </n-card>
@@ -403,9 +419,12 @@ function doPrint() {
 
     <ConfirmDialog
       :show="confirmShow"
+      :loading="confirmLoading"
       :title="confirmTitle"
       :content="confirmContent"
       confirm-text="确定删除"
+      type="error"
+      icon-type="warning"
       @update:show="confirmShow = $event"
       @confirm="onConfirmOk"
     />

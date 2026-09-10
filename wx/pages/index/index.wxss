@@ -77,6 +77,13 @@
   font-weight: 600;
 }
 
+.row-spec {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
 .row-price {
   display: block;
   margin-top: 10rpx;

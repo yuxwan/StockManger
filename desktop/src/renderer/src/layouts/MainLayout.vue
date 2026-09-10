@@ -224,7 +224,6 @@ onMounted(async () => {
       <n-layout-content class="bg-surface dark:bg-[#1a1a1a]">
         <main class="flex-1 flex flex-col p-8 overflow-auto" style="min-height: 0; height: calc(100vh - 40px);">
           <router-view v-slot="{ Component }">
-            <!-- 不包 Transition：此前 mode="out-in" 偶发卡住导致切换后内容区白屏且无法恢复 -->
             <component :is="Component" :key="`${$route.fullPath}_${refreshTick}`" />
           </router-view>
         </main>
@@ -234,21 +233,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* page transition */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-}
+/* page transition 由 JS 钩子（onEnter/onLeave）实现，无需 CSS */
 </style>
 
 <style>

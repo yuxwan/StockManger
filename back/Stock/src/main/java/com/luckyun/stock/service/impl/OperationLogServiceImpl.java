@@ -1,6 +1,7 @@
 package com.luckyun.stock.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luckyun.stock.entity.OperationLog;
 import com.luckyun.stock.mapper.OperationLogMapper;
@@ -32,5 +33,14 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
                 .orderByDesc(OperationLog::getCreateTime)
                 .last("LIMIT " + limit)
                 .list();
+    }
+
+    @Override
+    public IPage<OperationLog> getPage(long page, long pageSize, List<String> types) {
+        var query = lambdaQuery().orderByDesc(OperationLog::getCreateTime);
+        if (types != null && !types.isEmpty()) {
+            query.in(OperationLog::getType, types);
+        }
+        return query.page(new Page<>(page, pageSize));
     }
 }

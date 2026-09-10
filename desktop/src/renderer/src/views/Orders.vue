@@ -119,6 +119,7 @@ const detailItems = ref([])
 
 // ── 确认弹窗 ──
 const confirmShow = ref(false)
+const confirmLoading = ref(false)
 const confirmTitle = ref('')
 const confirmContent = ref('')
 const confirmText = ref('确定')
@@ -132,9 +133,16 @@ function useConfirm(title, content, callback, btnText) {
   confirmShow.value = true
 }
 
-function onConfirmOk() {
-  confirmShow.value = false
-  confirmCallback?.()
+async function onConfirmOk() {
+  if (confirmLoading.value) return
+  confirmLoading.value = true
+  try {
+    const ret = confirmCallback?.()
+    if (ret && typeof ret.then === 'function') await ret
+  } finally {
+    confirmLoading.value = false
+    confirmShow.value = false
+  }
 }
 
 async function openDetail(order) {
@@ -249,30 +257,30 @@ onMounted(() => {
 
 
 const orderColumns = [
-  { title: '订单号', key: 'orderNo', minWidth: 200 },
-  { title: '时间', key: 'createTime', minWidth: 160 },
+  { title: '订单号', key: 'orderNo' },
+  { title: '时间', key: 'createTime' },
   {
-    title: '销售员', key: 'userId', minWidth: 90,
+    title: '销售员', key: 'userId', width: 100,
     render(row) {
       const name = userMap.value[row.userId]
       return h('span', { class: 'text-sm text-on-surface dark:text-inverse-on-surface' }, name || '—')
     }
   },
   {
-    title: '支付方式', key: 'payment', minWidth: 100,
+    title: '支付方式', key: 'payment', width: 100,
     render(row) {
       return h('span', { class: 'inline-flex items-center gap-1' }, [
         h('span', paymentLabels[row.payment] || row.payment)
       ])
     }
   },
-  { title: '商品数', key: 'itemCount', minWidth: 80 },
+  { title: '商品数', key: 'itemCount', width: 100 },
   {
-    title: '金额', key: 'total', minWidth: 100, className: 'text-right',
+    title: '金额', key: 'total', width: 100, className: 'text-right',
     render(row) { return h('span', { class: 'font-semibold' }, '¥' + (row.total?.toFixed(2) || '0.00')) }
   },
   {
-    title: '状态', key: 'status', minWidth: 80, className: 'text-right',
+    title: '状态', key: 'status', width: 100, className: 'text-right',
     render(row) {
       const isCompleted = row.status === 'completed'
       return h('span', {
@@ -284,7 +292,7 @@ const orderColumns = [
     }
   },
   {
-    title: '操作', key: 'actions', width: 150, fixed: 'right',
+    title: '操作', key: 'actions', fixed: 'right', width: 160,
     render(row) {
       return h('div', { class: 'inline-flex items-center gap-0.5' }, [
         h('button', {
@@ -518,7 +526,7 @@ const totalRevenue = computed(() =>
       </n-drawer-content>
     </n-drawer>
 
-    <ConfirmDialog :show="confirmShow" :title="confirmTitle" :content="confirmContent" :confirm-text="confirmText"
+    <ConfirmDialog :show="confirmShow" :loading="confirmLoading" :title="confirmTitle" :content="confirmContent" :confirm-text="confirmText"
       type="error" icon-type="warning" @update:show="confirmShow = $event" @confirm="onConfirmOk" />
 
     <!-- 单品退款弹窗 -->
