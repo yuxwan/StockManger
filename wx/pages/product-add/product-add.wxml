@@ -1,0 +1,87 @@
+<scroll-view scroll-y class="pa-page">
+  <view class="group-card card">
+    <!-- 商品图片（上传到 BASE_UPLOAD_URL，返回 URL 随商品保存） -->
+    <view class="img-row">
+      <view class="img-preview" bindtap="chooseImage">
+        <image wx:if="{{form.image}}" class="img-preview-img" src="{{form.image}}" mode="aspectFill" />
+        <view wx:else class="img-empty">
+          <t-icon name="camera" color="#9a9a9e" size="56rpx" />
+          <text class="img-empty-text">上传图片</text>
+        </view>
+      </view>
+      <view class="img-side">
+        <view class="img-tip">支持 JPG/PNG，点击图片可重选</view>
+        <view wx:if="{{uploading}}" class="img-uploading">上传中…</view>
+        <view wx:elif="{{form.image}}" class="img-remove" bindtap="removeImage">移除图片</view>
+      </view>
+    </view>
+
+    <!-- 条码 -->
+    <view class="row">
+      <text class="label">条码</text>
+      <view class="value">
+        <input class="input" placeholder="扫码或手动输入" value="{{form.barcode}}" bindinput="onBarcodeInput" />
+        <view class="scan-mini" bindtap="scanBarcode">
+          <t-icon name="scan" color="white" />
+        </view>
+      </view>
+    </view>
+    <!-- 名称 -->
+    <view class="row">
+      <text class="label req">名称</text>
+      <view class="value">
+        <input class="input" placeholder="商品名称（可扫码填入）" value="{{form.name}}" bindinput="onNameInput" />
+        <view class="scan-mini" bindtap="scanName">
+          <t-icon name="scan" color="white" />
+        </view>
+      </view>
+    </view>
+    <!-- 规格 -->
+    <view class="row">
+      <text class="label">规格型号</text>
+      <view class="value"><input class="input" placeholder="如：500ml / M码（可选）" value="{{form.spec}}" bindinput="onSpecInput" /></view>
+    </view>
+    <!-- 销售价 -->
+    <view class="row">
+      <text class="label req">销售价</text>
+      <view class="value"><input class="input" type="digit" placeholder="0.00" value="{{form.price}}" bindinput="onPriceInput" /></view>
+    </view>
+    <!-- 数量（仅新增/扫码带出时显示；编辑库存请走「出入库」） -->
+    <view wx:if="{{!editId}}" class="row">
+      <text class="label req">数量</text>
+      <view class="value"><input class="input" type="number" placeholder="1（最低 1）" value="{{form.stock}}" bindinput="onStockInput" /></view>
+    </view>
+    <!-- 单位 -->
+    <view class="row">
+      <text class="label">单位</text>
+      <view class="value"><input class="input" value="{{form.unit}}" bindinput="onUnitInput" /></view>
+    </view>
+    <!-- 存放位置 -->
+    <view class="row">
+      <text class="label">存放位置</text>
+      <view class="value"><input class="input" placeholder="如：A1（可选）" value="{{form.location}}" bindinput="onLocationInput" /></view>
+    </view>
+    <!-- 有效期 -->
+    <view class="row">
+      <text class="label">有效期</text>
+      <view class="value">
+        <view class="expiry-types">
+          <view wx:for="{{expiryTypes}}" wx:key="key" class="exp-chip {{form.expiryType === item.key ? 'on' : ''}}" data-key="{{item.key}}" bindtap="onExpiryType">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view style="margin-top: 24rpx;">
+        <input wx:if="{{form.expiryType}}" class="input expiry-num" type="number" placeholder="数值" value="{{form.expiryValue}}" bindinput="onExpiryValueInput" />
+      </view>
+    </view>
+
+    <view class="pa-submit {{submitting ? 'off' : ''}}" bindtap="submit" disabled="{{submitting}}">
+      {{submitting ? '保存中…' : (editId ? '保存修改' : '添加商品')}}
+    </view>
+
+    <!-- 编辑模式：删除商品 -->
+    <view wx:if="{{editId}}" class="pa-del {{deleting ? 'off' : ''}}" bindtap="deleteProduct">
+      删除商品
+    </view>
+  </view>
+</scroll-view>

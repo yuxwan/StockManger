@@ -95,7 +95,8 @@ function onCustomRangeChange(val) {
   applyFilterChange()
 }
 
-function onSellerChange() {
+function onSellerChange(val) {
+  sellerId.value = val || null
   applyFilterChange()
 }
 

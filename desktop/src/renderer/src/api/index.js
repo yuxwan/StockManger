@@ -1,5 +1,17 @@
 import request from './request'
 
+/** 上传图片文件，返回图片 URL */
+export async function uploadImage(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const data = await request.post('/upload', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  const url = (data && data.data && data.data.url) || (data && data.url) || ''
+  if (url) return url
+  throw new Error((data && data.msg) || '上传失败')
+}
+
 export const authApi = {
   login(data) {
     return request.post('/auth/login', data)

@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS product (
     stock INT NOT NULL DEFAULT 0,
     unit VARCHAR(20) DEFAULT '个',
     location VARCHAR(100),
+    image VARCHAR(500) DEFAULT NULL COMMENT '商品图URL',
     expiry VARCHAR(50) COMMENT 'D-天 M-月 Y-年',
     category_id BIGINT,
     status INT DEFAULT 1 COMMENT '0-下架 1-上架',

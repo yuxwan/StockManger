@@ -1,0 +1,66 @@
+<!--pages/login/login.wxml-->
+<view class="login-page">
+
+  <!-- 顶部状态栏占位（沉浸式 custom 导航） -->
+  <view style="height: {{statusBarHeight}}px;"></view>
+
+  <!-- 品牌区 -->
+  <view class="brand-wrap">
+    <view class="brand-logo">
+      <t-icon name="view-module" color="#ffffff" size="44rpx" />
+    </view>
+    <view class="brand-text">
+      <view class="brand-title">欢迎回来</view>
+      <view class="brand-name">登录入库</view>
+      <view class="brand-desc">为门店经营者打造的轻量库存与收银工具。</view>
+    </view>
+  </view>
+
+  <!-- 表单 -->
+  <view class="form-wrap">
+    <view class="field">
+      <view class="field-label">账号</view>
+      <view class="field-input">
+        <t-icon name="user" color="#71717a" size="38rpx" />
+        <input
+          class="input"
+          value="{{username}}"
+          placeholder="请输入账号"
+          placeholder-class="ph"
+          maxlength="30"
+          bindinput="onUsername"
+          bindconfirm="onLogin"
+          confirm-type="next"
+        />
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">密码</view>
+      <view class="field-input">
+        <t-icon name="lock-on" color="#71717a" size="38rpx" />
+        <input
+          class="input"
+          value="{{password}}"
+          password="{{!showPwd}}"
+          placeholder="请输入密码"
+          placeholder-class="ph"
+          maxlength="32"
+          bindinput="onPassword"
+          bindconfirm="onLogin"
+          confirm-type="done"
+        />
+        <view class="pwd-toggle" bindtap="togglePwd">
+          <t-icon name="{{showPwd ? 'browse-off' : 'browse'}}" color="#a1a1aa" size="34rpx" />
+        </view>
+      </view>
+    </view>
+
+    <view class="login-btn" hover-class="login-btn-hover" bindtap="onLogin">
+      登录并进入门店
+    </view>
+  </view>
+
+  <!-- 协议提示 -->
+  <view class="agreement">登录即表示同意《服务协议》和《隐私政策》</view>
+</view>

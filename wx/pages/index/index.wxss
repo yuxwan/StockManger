@@ -1,0 +1,460 @@
+/* pages/index/index.wxss — 收银台样式 */
+.pos-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f4f4f5;
+}
+
+/* 头部 */
+.pos-head {
+  background: var(--surface);
+  padding: 24rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.head-sub {
+  display: block;
+  font-size: small;
+  color: #9a9a9e;
+}
+
+.head-title {
+  display: block;
+  margin-top: 4rpx;
+  font-size: large;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+}
+
+.scan-btn {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid #e4e4e4;
+}
+
+.scan-img {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+/* 列表区 */
+.body {
+  flex: 1;
+  min-height: 0;
+}
+
+.empty {
+  padding: 160rpx 0;
+  text-align: center;
+  color: #9a9a9e;
+  font-size: 26rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16rpx;
+}
+
+.row-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.row-price {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.row-ops {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 18rpx;
+}
+
+.row-del {
+  font-size: 22rpx;
+  color: #9a9a9e;
+  padding: 4rpx 8rpx;
+}
+
+/* ── 数量步进器 ── */
+.qty-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.qty-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 18rpx;
+  background: #f1f1f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-btn.plus {
+  background: #111111;
+}
+
+.qty-btn.disabled {
+  opacity: 0.35;
+}
+
+/* 减号（CSS 横线） */
+.q-bar {
+  width: 22rpx;
+  height: 4rpx;
+  border-radius: 2rpx;
+  background: #111111;
+}
+
+/* 加号（横线 + 竖线，伪元素绘制） */
+.q-plus {
+  width: 22rpx;
+  height: 22rpx;
+  position: relative;
+}
+
+.q-plus::before,
+.q-plus::after {
+  content: '';
+  position: absolute;
+  background: var(--surface);
+  border-radius: 2rpx;
+}
+
+.q-plus::before {
+  left: 0;
+  right: 0;
+  top: 9rpx;
+  height: 4rpx;
+}
+
+.q-plus::after {
+  top: 0;
+  bottom: 0;
+  left: 9rpx;
+  width: 4rpx;
+}
+
+.qty-input {
+  width: 72rpx;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  height: 48rpx;
+  padding: 0;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #18181b;
+  background: transparent;
+}
+
+.qty-num {
+  min-width: 56rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+/* 底部结算 */
+.bar {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-top: 2rpx solid #e5e5e7;
+  padding: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.bar-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.bar-label {
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.bar-total {
+  font-size: 46rpx;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+}
+
+.bar-btn {
+  height: 96rpx;
+  padding: 0 72rpx;
+  border-radius: 48rpx;
+  background: #111111;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── 添加临时商品（虚线按钮） ── */
+.add-tmp {
+  height: 92rpx;
+  border: 2rpx dashed #c8c8cc;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  color: #6b6b70;
+  font-size: 28rpx;
+  font-weight: 600;
+  background: transparent;
+}
+
+.at-plus {
+  font-size: 30rpx;
+}
+
+/* ── 底部弹层（扫码结果 / 临时商品共用） ── */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  z-index: 99;
+}
+
+.sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 44rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.sheet-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sheet-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.btn-cancel {
+  flex: 1;
+  height: 92rpx;
+  border-radius: 24rpx;
+  background: #f1f1f3;
+  color: #6b6b70;
+  font-size: 30rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-add {
+  flex: 1.4;
+  height: 92rpx;
+  border-radius: 24rpx;
+  background: #111111;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 临时商品表单 */
+.tmp-field {
+  margin-top: 28rpx;
+}
+
+.tmp-field.half {
+  flex: 1;
+  margin-top: 0;
+}
+
+.tmp-row {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 28rpx;
+}
+
+.tmp-label {
+  display: block;
+  font-size: 24rpx;
+  color: #9a9a9e;
+  margin-bottom: 12rpx;
+}
+
+.tmp-input {
+  background: #f4f4f5;
+  border-radius: 16rpx;
+  height: 84rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* 扫码识别结果展示 */
+.scan-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ok-dot {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tip-text {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.tip-code {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #c0c0c4;
+  font-family: monospace;
+}
+
+.res-name {
+  margin-top: 28rpx;
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.res-price {
+  margin-top: 8rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #6b6b70;
+}
+
+/* 扫码按钮 loading 态 */
+.scan-img.dim {
+  opacity: 0.4;
+}
+
+/* ── page-container 内布局 ── */
+.pc {
+  background: var(--surface);
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 40rpx;
+  box-sizing: border-box;
+  min-height: 400rpx;
+}
+
+.pc-bar {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #e4e4e7;
+  margin: 0 auto 24rpx;
+}
+
+.pc-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.pc-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+/* 扫码成功面板：单一主按钮 */
+.sheet-one-btn {
+  margin-top: 40rpx;
+}
+
+.btn-add.wide {
+  width: 100%;
+}
+
+.tip-title {
+  margin-top: 14rpx;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+/* 头部右侧：清空 + 扫码 */
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.clear-btn {
+  font-size: 26rpx;
+  color: #6b6b70;
+  padding: 8rpx 4rpx;
+}
+
+.clear-btn.hide {
+  visibility: hidden;
+}
+
+/* 头部右侧：清空 + 扫码 */
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.clear-btn {
+  font-size: 26rpx;
+  color: #6b6b70;
+  padding: 8rpx 4rpx;
+}
+
+.clear-btn.hide {
+  visibility: hidden;
+}

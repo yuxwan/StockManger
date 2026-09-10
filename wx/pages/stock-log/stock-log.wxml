@@ -1,0 +1,26 @@
+<!--pages/stock-log/stock-log.wxml-->
+<scroll-view scroll-y style="height: 100vh;" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
+  <view style="padding: 24rpx; display: flex; flex-direction: column; gap: 24rpx;">
+    <!-- 空态 / 加载态 -->
+    <view wx:if="{{loading && logs.length === 0}}" style="text-align: center; color: #9a9a9e; padding: 120rpx 0; font-size: 28rpx;">加载中…</view>
+    <view wx:elif="{{logs.length === 0}}" style="text-align: center; color: #9a9a9e; padding: 120rpx 0;">
+      <view style="font-size: 32rpx; font-weight: 700; color: #52525b;">暂无出入库记录</view>
+      <view style="font-size: 26rpx; margin-top: 12rpx;">在「库存」页对商品执行入库/出库后会记录在这里</view>
+    </view>
+
+    <view wx:for="{{logs}}" wx:key="id" class="log-card" style="background: #ffffff; border-radius: 28rpx; padding: 28rpx;">
+      <view style="display: flex; align-items: center; justify-content: space-between;">
+        <view style="display: flex; align-items: center; gap: 16rpx; min-width: 0;">
+          <view style="padding: 6rpx 16rpx; border-radius: 10rpx; font-size: 22rpx; font-weight: 700; flex-shrink: 0;
+            background: {{item.type === 'STOCK_IN' ? '#e8f6ef' : '#fdecee'}}; color: {{item.type === 'STOCK_IN' ? '#0a8f4c' : '#e5484d'}};">
+            {{item.type === 'STOCK_IN' ? '入库' : '出库'}}
+          </view>
+          <text style="flex: 1; font-size: 30rpx; font-weight: 600; color: #18181b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{item.targetName}}</text>
+        </view>
+        <text style="flex-shrink: 0; font-size: 24rpx; color: #9a9a9e; margin-left: 16rpx;">{{item.timeText}}</text>
+      </view>
+      <view style="margin-top: 16rpx; font-size: 26rpx; color: #52525b; line-height: 1.5;">{{item.detail}}</view>
+      <view wx:if="{{item.operatorName}}" style="margin-top: 12rpx; font-size: 24rpx; color: #a1a1aa;">操作人：{{item.operatorName}}</view>
+    </view>
+  </view>
+</scroll-view>

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "添加商品",
+  "disableScroll": true,
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon"
+  }
+}

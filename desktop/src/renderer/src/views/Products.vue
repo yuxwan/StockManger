@@ -137,6 +137,13 @@ const isCashier = localStorage.getItem('userRole') === 'cashier'
 
 const productColumns = computed(() => {
   const cols = [
+    {
+      title: '图', key: 'image', width: 56, align: 'center',
+      render(row) {
+        if (!row.image) return h('div', { class: 'w-8 h-8 mx-auto rounded bg-black/5 dark:bg-white/10' })
+        return h('img', { src: row.image, class: 'w-8 h-8 mx-auto rounded object-cover', alt: row.name })
+      }
+    },
     { title: '条码', key: 'barcode', minWidth: 150 },
     { title: '商品名称', key: 'name', minWidth: 150 },
     { title: '规格型号', key: 'spec', minWidth: 120 },
@@ -338,7 +345,7 @@ function doPrint() {
           <span class="text-sm font-body">暂无商品</span>
         </div>
         <div v-else class="flex-1 min-h-0">
-          <n-data-table flex-height :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1320"
+          <n-data-table flex-height :bordered="false" :columns="productColumns" :data="products" size="small" scroll-x="1420"
             :loading="searchLoading" style="height:100%" />
         </div>
       </n-card>

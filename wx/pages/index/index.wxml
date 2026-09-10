@@ -1,0 +1,98 @@
+<!--pages/index/index.wxml-->
+<view class="pos-page">
+  <!-- 头部 -->
+  <view class="pos-head">
+    <view class="head-left">
+      <text class="head-sub">2026年9月8日 星期二</text>
+      <text class="head-title">收银台</text>
+    </view>
+    <view class="head-actions">
+      <text class="clear-btn {{items.length === 0 ? 'hide' : ''}}" bindtap="clearAll">清空</text>
+      <view class="scan-btn" bindtap="onScanTap">
+        <t-icon name="scan" color="black" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品列表 -->
+  <scroll-view scroll-y class="body">
+    <view style="display: flex; flex-direction: column; gap: 24rpx; padding: 24rpx;">
+      <view wx:for="{{items}}" wx:key="id" class="row card">
+        <view class="row-info">
+          <text class="row-name">{{item.name}}</text>
+          <text class="row-price">¥{{item.price}}</text>
+        </view>
+
+        <view class="row-ops">
+          <text class="row-del" data-idx="{{index}}" bindtap="removeItem">删除</text>
+          <view class="qty-ctrl">
+            <view class="qty-btn {{item.qty <= 1 ? 'disabled' : ''}}" data-idx="{{index}}" bindtap="dec">
+              <t-icon name="remove" color="#111111"/>
+            </view>
+            <input class="qty-input" type="number" value="{{item.qty}}" data-idx="{{index}}" bindinput="onQtyInput" bindblur="onQtyBlur" />
+            <view class="qty-btn plus" data-idx="{{index}}" bindtap="inc">
+              <t-icon name="add" color="white"/>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="add-tmp" bindtap="openTmp">
+        <t-icon name="add" />
+        <text>添加临时商品</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部结算 -->
+  <view class="bar">
+    <view class="bar-info">
+      <text class="bar-label">应收金额</text>
+      <text class="bar-total">¥{{totalText}}</text>
+    </view>
+    <view class="bar-btn" bindtap="onCheckout">结算</view>
+  </view>
+</view>
+
+<!-- 扫码识别结果（打样） -->
+<view wx:if="{{scanResult}}" class="mask" bindtap="closeScan">
+  <view class="sheet" catchtap="noop">
+    <view class="scan-tip">
+      <view class="ok-dot">✓</view>
+      <text class="tip-title">已添加到收银台</text>
+      <text class="tip-code">{{scanResult.barcode}}</text>
+    </view>
+    <view class="res-name">{{scanResult.name}}</view>
+    <view class="res-price">¥{{scanResult.price}}</view>
+    <view class="sheet-one-btn">
+      <view class="btn-add wide" bindtap="rescan">再扫一件</view>
+    </view>
+  </view>
+</view>
+
+<!-- 添加临时商品录入（page-container 弹层） -->
+<page-container show="{{tmpShow}}" overlay="{{true}}" position="bottom" round="{{true}}"
+  duration="{{220}}" close-on-click-overlay="{{true}}" bind:close="onTmpContainerClose">
+  <view class="pc">
+    <view class="pc-bar"></view>
+    <text class="pc-title">添加临时商品</text>
+    <view class="tmp-field">
+      <text class="tmp-label">商品名称</text>
+      <input class="tmp-input" placeholder="如：定制饮品" placeholder-class="ph" value="{{tmp.name}}" bindinput="onTmpName" />
+    </view>
+    <view class="tmp-row">
+      <view class="tmp-field half">
+        <text class="tmp-label">单价（元）</text>
+        <input class="tmp-input" type="digit" placeholder="0.00" value="{{tmp.price}}" bindinput="onTmpPrice" />
+      </view>
+      <view class="tmp-field half">
+        <text class="tmp-label">数量</text>
+        <input class="tmp-input" type="number" value="{{tmp.qty}}" bindinput="onTmpQty" />
+      </view>
+    </view>
+    <view class="pc-btns">
+      <view class="btn-cancel" bindtap="closeTmp">取消</view>
+      <view class="btn-add" bindtap="confirmTmp">加入本单</view>
+    </view>
+  </view>
+</page-container>

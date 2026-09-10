@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import JsBarcode from 'jsbarcode'
 import message from '../utils/message'
-import { productApi } from '../api'
+import { productApi, uploadImage } from '../api'
 import { hasPermission, loadMenus } from '../composables/permission'
 
 const router = useRouter()
@@ -12,7 +12,9 @@ const route = useRoute()
 
 const isEdit = computed(() => !!route.params.id)
 const submitting = ref(false)
-const form = ref({ barcode: '', name: '', spec: '', price: '', purchasePrice: '', stock: '', unit: '', location: '', expiryType: 'days', expiryValue: '', expiryDate: null })
+const uploadingImg = ref(false)
+const fileInput = ref(null)
+const form = ref({ barcode: '', name: '', spec: '', price: '', purchasePrice: '', stock: '', unit: '个', location: '', expiryType: 'days', expiryValue: '', expiryDate: null, image: '' })
 const barcodeInput = ref(null)
 const expiryOptions = [
   { value: 'days', label: '按天' },
@@ -29,7 +31,7 @@ const labelSizes = [
 ]
 
 const totalPrice = computed(() => {
-  const price = Number(form.value.purchasePrice)
+  const price = Number(form.value.price)
   const stock = Number(form.value.stock)
   return price && stock ? price * stock : 0
 })
@@ -57,11 +59,12 @@ onMounted(async () => {
           price: product.price || '',
           purchasePrice: product.purchasePrice || '',
           stock: product.stock || '',
-          unit: product.unit || '',
+          unit: product.unit || '个',
           location: product.location || '',
           expiryType: 'days',
           expiryValue: '',
-          expiryDate: null
+          expiryDate: null,
+          image: product.image || ''
         }
         // 解析有效期
         if (product.expiry) {
@@ -105,7 +108,7 @@ watch(() => form.value.barcode, (val) => {
         form.value.spec = product.spec || ''
         form.value.price = product.price || ''
         form.value.purchasePrice = product.purchasePrice || ''
-        form.value.unit = product.unit || ''
+        form.value.unit = product.unit || '个'
         form.value.location = product.location || ''
       }
     } catch {}
@@ -152,6 +155,35 @@ function onBarcodeKeydown(e) {
   }
 }
 
+// ── 商品图片上传 ──
+function pickImage() {
+  fileInput.value?.click()
+}
+
+function onFileChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  doUpload(file)
+  e.target.value = ''
+}
+
+async function doUpload(file) {
+  if (uploadingImg.value) return
+  uploadingImg.value = true
+  try {
+    form.value.image = await uploadImage(file)
+    message.success('图片已上传')
+  } catch (err) {
+    message.error(err.message || '图片上传失败')
+  } finally {
+    uploadingImg.value = false
+  }
+}
+
+function removeImage() {
+  form.value.image = ''
+}
+
 async function submit() {
   const { barcode, name, spec, price, purchasePrice, stock, unit, location, expiryType, expiryValue, expiryDate } = form.value
   if (!barcode) {
@@ -177,7 +209,7 @@ async function submit() {
   } else if (expiryValue) {
     expiry = `${expiryValue}${{ days: 'D', months: 'M', years: 'Y' }[expiryType]}`
   }
-  const data = { barcode, name, spec, price: Number(price), purchasePrice: purchasePrice === '' ? null : Number(purchasePrice), stock: Number(stock), unit, location, expiry }
+  const data = { barcode, name, spec, price: Number(price), purchasePrice: purchasePrice === '' ? null : Number(purchasePrice), stock: Number(stock), unit, location, expiry, image: form.value.image || '' }
   try {
     if (isEdit.value) {
       await productApi.update(route.params.id, data)
@@ -210,6 +242,44 @@ async function submit() {
       </div>
 
       <div class="flex flex-col gap-5">
+        <!-- 商品图片 -->
+        <div>
+          <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">商品图片</label>
+          <div class="flex items-center gap-4">
+            <div
+              class="w-24 h-24 rounded-xl overflow-hidden border border-dashed flex items-center justify-center cursor-pointer transition-colors"
+              :class="form.image
+                ? 'border-transparent'
+                : 'border-on-surface-variant/30 dark:border-gray-600 hover:border-black/50 dark:hover:border-white/50'"
+              @click="pickImage"
+            >
+              <img v-if="form.image" :src="form.image" alt="商品图" class="w-full h-full object-cover" />
+              <div v-else class="flex flex-col items-center gap-1 text-on-surface-variant/50 dark:text-gray-600">
+                <Icon icon="mdi:camera-outline" width="24" />
+                <span class="text-[10px]">{{ uploadingImg ? '上传中…' : '上传图片' }}</span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button
+                class="h-8 px-3.5 rounded-xl text-xs font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors inline-flex items-center gap-1.5"
+                :disabled="uploadingImg"
+                @click="pickImage"
+              >
+                <Icon icon="mdi:upload" width="14" />{{ form.image ? '更换图片' : '选择图片' }}
+              </button>
+              <button
+                v-if="form.image"
+                class="h-8 px-3.5 rounded-xl text-xs font-body font-semibold text-red-500 dark:text-red-400 hover:bg-red-500/10 transition-colors inline-flex items-center gap-1.5"
+                :disabled="uploadingImg"
+                @click="removeImage"
+              >
+                <Icon icon="mdi:delete-outline" width="14" />移除
+              </button>
+            </div>
+          </div>
+          <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
+        </div>
+
         <!-- 条码 -->
         <div>
           <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">
@@ -278,12 +348,12 @@ async function submit() {
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid gap-3" :class="isEdit ? 'grid-cols-4' : 'grid-cols-3'">
           <div>
             <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">销售价（元）</label>
             <n-input-number v-model:value="form.price" placeholder="0" :min="0" clearable style="width:100%" />
           </div>
-          <div>
+          <div v-if="isEdit">
             <label class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500 mb-2 block">进货价（元）</label>
             <n-input-number v-model:value="form.purchasePrice" placeholder="0" :min="0" clearable style="width:100%" />
           </div>
@@ -298,10 +368,11 @@ async function submit() {
         </div>
       </div>
 
-      <!-- 本次入库价格 -->
+      <!-- 本次合计：按销售价计算（销售价 × 数量） -->
       <div class="flex items-center justify-between px-4 py-3 rounded-lg bg-surface dark:bg-[#1a1a1a] mt-6">
-        <span class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500">本次入库价格</span>
-        <span class="text-lg font-body font-bold text-on-surface dark:text-inverse-on-surface">¥{{ totalPrice.toLocaleString() }}</span>
+        <span class="text-xs font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-500">本次合计（按销售价）</span>
+        <span v-if="totalPrice > 0" class="text-lg font-body font-bold text-on-surface dark:text-inverse-on-surface">¥{{ totalPrice.toLocaleString() }}</span>
+        <span v-else class="text-sm font-body font-semibold text-on-surface-variant/60 dark:text-gray-500">未录入销售价或数量</span>
       </div>
 
       <!-- 标签尺寸 -->

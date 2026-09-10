@@ -173,6 +173,8 @@ public class ReportServiceImpl implements ReportService {
             case "today" -> now.atStartOfDay();
             case "week" -> now.minusDays(7).atStartOfDay();
             case "month" -> now.minusMonths(1).atStartOfDay();
+            // 本季度首日（1/4/7/10 月 1 日）
+            case "quarter" -> LocalDate.of(now.getYear(), now.getMonth().firstMonthOfQuarter().getValue(), 1).atStartOfDay();
             case "year" -> now.withDayOfYear(1).atStartOfDay();
             default -> now.minusDays(7).atStartOfDay();
         };

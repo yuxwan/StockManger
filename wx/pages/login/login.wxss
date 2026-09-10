@@ -1,0 +1,165 @@
+/* pages/login/login.wxss — 登录页（参考「登录」样例稿，白底沉浸式） */
+
+.login-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+/* ── 品牌区 ── */
+.brand-wrap {
+  margin-top: 96rpx;
+}
+
+.brand-logo {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 28rpx;
+  background: #18181b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-text {
+  margin-top: 60rpx;
+}
+
+.brand-title {
+  font-size: 28rpx;
+  color: #71717a;
+}
+
+.brand-name {
+  margin-top: 8rpx;
+  font-size: 68rpx;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -2rpx;
+  color: #18181b;
+}
+
+.brand-desc {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #71717a;
+}
+
+/* ── 表单 ── */
+.form-wrap {
+  margin-top: 80rpx;
+}
+
+.field {
+  margin-bottom: 40rpx;
+}
+
+.field-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.field-input {
+  margin-top: 16rpx;
+  height: 112rpx;
+  background: #f4f4f5;
+  border-radius: 28rpx;
+  padding: 0 32rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #18181b;
+}
+
+.pwd-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx;
+}
+
+/* ── 登录按钮 ── */
+.login-btn {
+  margin-top: 16rpx;
+  height: 112rpx;
+  line-height: 112rpx;
+  background: #18181b;
+  color: #ffffff;
+  border-radius: 28rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-btn::after {
+  border: none;
+}
+
+.login-btn-hover {
+  background: #2e2e33;
+}
+
+/* ── 协议提示 ── */
+.agreement {
+  margin-top: 48rpx;
+  text-align: center;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #a1a1aa;
+}
+
+/* ── 登录 loading 遮罩 ── */
+.loading-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loading-card {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 88rpx;
+  height: 88rpx;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 8rpx solid #e4e4e7;
+  border-top-color: #18181b;
+  animation: login-spin 0.8s linear infinite;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  display: block;
+  margin-top: 28rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #18181b;
+}

@@ -1,0 +1,113 @@
+.ol-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+/* 筛选 */
+.ol-head {
+  background: var(--surface);
+  padding: 20rpx 32rpx;
+  flex-shrink: 0;
+}
+
+.chips {
+  display: flex;
+  gap: 14rpx;
+}
+
+.chip {
+  padding: 0 32rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  background: #f1f1f3;
+  color: #6b6b70;
+  font-size: 26rpx;
+}
+
+.chip.on {
+  background: #111111;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* 列表 */
+.ol-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.ol-inner {
+  padding: 24rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.tip {
+  padding: 180rpx 0;
+  text-align: center;
+}
+
+.tip-t {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.tip-s {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.oc {
+  padding: 26rpx 28rpx;
+}
+
+.oc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.oc-no {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.oc-status {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.oc-status.off {
+  color: #9a9a9e;
+}
+
+.oc-mid {
+  margin-top: 10rpx;
+  display: flex;
+  gap: 24rpx;
+  font-size: 22rpx;
+  color: #9a9a9e;
+}
+
+.oc-bottom {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #f4f4f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.oc-count {
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.oc-money {
+  font-size: 34rpx;
+  font-weight: 800;
+}

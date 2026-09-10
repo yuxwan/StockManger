@@ -1,0 +1,4 @@
+/* pages/statistics/statistics.wxss */
+page{
+  --td-divider-color: #999
+}

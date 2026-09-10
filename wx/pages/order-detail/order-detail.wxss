@@ -1,0 +1,274 @@
+.d-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.d-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.d-inner {
+  padding: 24rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.d-tip {
+  padding: 200rpx 0;
+  text-align: center;
+}
+
+.tip-t {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.tip-s {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+/* 状态黑卡 */
+.hero {
+  background: #18181b;
+  border-radius: 28rpx;
+  padding: 32rpx;
+}
+
+.hero-state {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.state-dot {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-dot.off {
+  background: #52525b;
+}
+
+.hero-status {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.hero-status.off {
+  color: #9a9a9e;
+}
+
+.hero-time {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.hero-bottom {
+  margin-top: 28rpx;
+  padding-top: 22rpx;
+  border-top: 1rpx solid #2e2e32;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.hero-label {
+  font-size: 26rpx;
+  color: #9a9a9e;
+}
+
+.hero-money {
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+/* 卡片区块 */
+.card.sec {
+  margin-top: 24rpx;
+  padding: 28rpx;
+}
+
+.sec-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  margin-bottom: 20rpx;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 18rpx 0;
+}
+
+.item-row:last-of-type {
+  border-bottom: none;
+}
+
+.thumb {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.item-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #9a9a9e;
+}
+
+.item-qty {
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.item-total {
+  min-width: 130rpx;
+  text-align: right;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.sec-foot {
+  margin-top: 16rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f4f4f5;
+  display: flex;
+  justify-content: space-between;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+/* 支付信息 */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  font-size: 26rpx;
+}
+
+.info-k {
+  color: #9a9a9e;
+}
+
+.info-v {
+  font-weight: 500;
+}
+
+.info-v.mono {
+  font-family: monospace;
+  font-size: 24rpx;
+}
+
+/* 退款按钮（白底红字，与设计稿一致） */
+.refund-btn {
+  margin-top: 24rpx;
+  height: 100rpx;
+  line-height: 100rpx;
+  border-radius: 28rpx;
+  background: var(--surface);
+  color: #ef4444;
+  font-size: 30rpx;
+  font-weight: 700;
+  box-shadow: 0 0 12rpx rgba(0, 0, 0, 0.05);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refund-btn::after {
+  border: none;
+}
+
+/* 退款确认 sheet */
+.refund-sheet {
+  background: var(--surface);
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 44rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+
+.rs-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  text-align: center;
+}
+
+.rs-desc {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #6b6b70;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.rs-money {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.rs-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 40rpx;
+}
+
+.rs-cancel,
+.rs-confirm {
+  flex: 1;
+  height: 96rpx;
+  border-radius: 28rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rs-cancel {
+  background: #f1f1f3;
+  color: #6b6b70;
+}
+
+.rs-confirm {
+  background: #18181b;
+  color: #ffffff;
+}
+
+.rs-confirm.off {
+  opacity: 0.5;
+}

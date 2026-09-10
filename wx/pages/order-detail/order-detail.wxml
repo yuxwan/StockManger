@@ -1,0 +1,84 @@
+<view class="d-page">
+  <!-- 内容（可下拉刷新） -->
+  <scroll-view scroll-y class="d-scroll" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
+    <view class="d-inner">
+      <!-- 加载/空态 -->
+      <view wx:if="{{loading && !order}}" class="d-tip">加载中…</view>
+      <view wx:elif="{{!order}}" class="d-tip">
+        <view class="tip-t">暂无订单</view>
+        <view class="tip-s">下拉刷新重试</view>
+      </view>
+
+      <block wx:if="{{order}}">
+        <!-- 状态黑卡 -->
+        <view class="hero">
+          <view class="hero-state">
+            <view class="state-dot {{order.status === 'refunded' ? 'off' : ''}}">
+              <text>{{order.status === 'refunded' ? '↩' : '✓'}}</text>
+            </view>
+            <text class="hero-status {{order.status === 'refunded' ? 'off' : ''}}">
+              {{order.status === 'refunded' ? '已退款' : '已完成'}}
+            </text>
+          </view>
+          <text class="hero-time">{{order.timeText}}</text>
+          <view class="hero-bottom">
+            <text class="hero-label">实收金额</text>
+            <text class="hero-money">¥{{order.totalText}}</text>
+          </view>
+        </view>
+
+        <!-- 商品明细 -->
+        <view class="card sec">
+          <view class="sec-title">商品明细</view>
+          <view wx:for="{{items}}" wx:key="id" class="item-row">
+            <view class="thumb" style="background-color: {{item.thumbBg}}; color: {{item.thumbFg}};">{{item.thumb}}</view>
+            <view class="item-main">
+              <text class="item-name">{{item.name}}</text>
+              <text class="item-sub">¥{{item.priceText}}</text>
+            </view>
+            <text class="item-qty">×{{item.qty}}</text>
+            <text class="item-total">¥{{item.priceText}}</text>
+          </view>
+          <view class="sec-foot">
+            <text>合计</text>
+            <text class="sec-foot-total">¥{{order.totalText}}</text>
+          </view>
+        </view>
+
+        <!-- 支付信息 -->
+        <view class="card sec">
+          <view class="sec-title">支付信息</view>
+          <view class="info-row">
+            <view class="info-k">支付方式</view>
+            <view class="info-v">{{order.payText}}</view>
+          </view>
+          <view class="info-row">
+            <view class="info-k">订单编号</view>
+            <view class="info-v">{{order.orderNo}}</view>
+          </view>
+          <view class="info-row" wx:if="{{order.sellerName}}">
+            <view class="info-k">收银员工</view>
+            <view class="info-v">{{order.sellerName}}</view>
+          </view>
+        </view>
+
+        <!-- 退款按钮（仅已完成） -->
+        <view wx:if="{{order.status === 'completed'}}" class="refund-btn" bindtap="openRefund">发起退款</view>
+      </block>
+    </view>
+  </scroll-view>
+
+  <!-- 退款确认 -->
+  <page-container show="{{refundShow}}" overlay="{{true}}" position="bottom" round="{{true}}" duration="{{220}}" close-on-click-overlay="{{true}}" bind:close="closeRefund">
+    <view class="refund-sheet">
+      <view class="rs-title">确认发起退款？</view>
+      <view class="rs-desc">退款金额 <text class="rs-money">¥{{order.totalText}}</text>，退款后商品库存将自动恢复。</view>
+      <view class="rs-btns">
+        <view class="rs-cancel" bindtap="closeRefund">取消</view>
+        <view class="rs-confirm {{refunding ? 'off' : ''}}" bindtap="confirmRefund">
+          {{refunding ? '处理中…' : '确认退款'}}
+        </view>
+      </view>
+    </view>
+  </page-container>
+</view>

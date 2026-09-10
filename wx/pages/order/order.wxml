@@ -1,0 +1,36 @@
+<view class="ol-page">
+  <!-- 状态筛选 -->
+  <view class="ol-head">
+    <view class="chips">
+      <view class="chip {{filter === 'all' ? 'on' : ''}}" data-key="all" bindtap="onFilter">全部</view>
+      <view class="chip {{filter === 'completed' ? 'on' : ''}}" data-key="completed" bindtap="onFilter">已完成</view>
+      <view class="chip {{filter === 'refunded' ? 'on' : ''}}" data-key="refunded" bindtap="onFilter">退款</view>
+    </view>
+  </view>
+
+  <!-- 列表 -->
+  <scroll-view scroll-y class="ol-scroll" refresher-enabled
+    refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
+    <view class="ol-inner" style="display: flex; flex-direction: column; gap: 24rpx;">
+      <view wx:if="{{loading && shown.length === 0}}" class="tip">加载中…</view>
+      <view wx:elif="{{shown.length === 0}}" class="tip">
+        <view class="tip-t">暂无相关订单</view>
+        <view class="tip-s">下拉刷新或切换状态查看</view>
+      </view>
+
+      <view wx:for="{{shown}}" wx:key="id" class="card" data-id="{{item.id}}" bindtap="goDetail">
+        <view class="oc-top">
+          <text class="oc-no">{{item.orderNo}}</text>
+          <text class="oc-status {{item.status === 'refunded' ? 'off' : ''}}">
+            {{item.status === 'refunded' ? '已退款' : '已完成'}}
+          </text>
+        </view>
+        <view class="oc-mid"><text>{{item.timeText}}</text><text>{{item.payText}}</text></view>
+        <view class="oc-bottom">
+          <text class="oc-count">{{item.itemCount}} 件商品</text>
+          <text class="oc-money">¥{{item.totalText}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

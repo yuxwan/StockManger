@@ -128,22 +128,32 @@ public class ProductController {
     /** 入库 */
     @PostMapping("/{id}/stock-in")
     @SaCheckPermission("products:stock-in")
-    public ResponseEntity<?> stockIn(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
-        int quantity = body.getOrDefault("quantity", 0);
+    public ResponseEntity<?> stockIn(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        int quantity = toInt(body.get("quantity"));
         if (quantity <= 0) return ResponseEntity.badRequest().body(Map.of("msg", "入库数量必须大于0"));
-        return adjustStock(id, quantity);
+        String remark = body.get("remark") == null ? "" : String.valueOf(body.get("remark")).trim();
+        return adjustStock(id, quantity, remark);
     }
 
     /** 出库 */
     @PostMapping("/{id}/stock-out")
     @SaCheckPermission("products:stock-out")
-    public ResponseEntity<?> stockOut(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
-        int quantity = body.getOrDefault("quantity", 0);
+    public ResponseEntity<?> stockOut(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        int quantity = toInt(body.get("quantity"));
         if (quantity <= 0) return ResponseEntity.badRequest().body(Map.of("msg", "出库数量必须大于0"));
-        return adjustStock(id, -quantity);
+        String remark = body.get("remark") == null ? "" : String.valueOf(body.get("remark")).trim();
+        return adjustStock(id, -quantity, remark);
     }
 
-    private ResponseEntity<?> adjustStock(Long id, int delta) {
+    private int toInt(Object v) {
+        if (v instanceof Number) return ((Number) v).intValue();
+        if (v != null) {
+            try { return Integer.parseInt(String.valueOf(v).trim()); } catch (NumberFormatException ignored) {}
+        }
+        return 0;
+    }
+
+    private ResponseEntity<?> adjustStock(Long id, int delta, String remark) {
         Product product = productService.getById(id);
         if (product == null) return ResponseEntity.badRequest().body(Map.of("msg", "商品不存在"));
         int newStock = product.getStock() + delta;
@@ -151,9 +161,13 @@ public class ProductController {
         String logType = delta > 0 ? "STOCK_IN" : "STOCK_OUT";
         String action = delta > 0 ? "入库" : "出库";
         int qty = Math.abs(delta);
+        String detail = action + " " + qty + " " + (product.getUnit() != null ? product.getUnit() : "件")
+                + "（库存：" + product.getStock() + " → " + newStock + "）";
+        if (remark != null && !remark.isEmpty()) {
+            detail += "，备注：" + remark;
+        }
         operationLogService.log(logType, "PRODUCT", id, product.getName(),
-                action + " " + qty + " " + (product.getUnit() != null ? product.getUnit() : "件")
-                        + "（库存：" + product.getStock() + " → " + newStock + "）",
+                detail,
                 getOperatorName());
         product.setStock(newStock);
         productService.updateById(product);

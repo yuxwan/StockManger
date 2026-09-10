@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="naiveTheme" :theme-overrides="themeOverrides">
+  <n-config-provider :theme="naiveTheme" :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
     <n-loading-bar-provider>
       <LoadingBarInit />
       <n-message-provider>
@@ -14,7 +14,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { darkTheme } from 'naive-ui'
+import { darkTheme, zhCN, dateZhCN } from 'naive-ui'
 import LoadingBarInit from './components/LoadingBarInit.vue'
 import UpdateDialog from './components/UpdateDialog.vue'
 

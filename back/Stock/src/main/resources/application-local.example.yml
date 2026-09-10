@@ -56,6 +56,17 @@ static:
   resource:
     url: https://your-domain.com/static/
 
+# FTP 文件上传配置
+ftp:
+  server: your_ftp_server
+  port: 21
+  username: your_ftp_username
+  password: your_ftp_password
+  basePath: /Upload/
+  urlPrefix: https://your-domain.com/static/
+  passiveMode: true
+  controlEncoding: UTF-8
+
 logging:
   level:
     com.luckyun.stock: debug

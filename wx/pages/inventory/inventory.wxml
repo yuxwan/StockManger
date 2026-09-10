@@ -1,0 +1,78 @@
+<view class="inv-page">
+  <!-- 顶部搜索（固定，不参与下拉） -->
+  <view class="search-head">
+    <view class="search-bar">
+      <t-icon name="search" />
+      <input style="flex: 1; font-size: 28rpx;" type="text" placeholder="搜索商品名称 / 条码" value="{{keyword}}" bindinput="onKeywordInput" bindconfirm="onSearchConfirm" confirm-type="search" />
+    </view>
+    <view class="head-btn" bindtap="goStockLog">
+      <t-icon name="swap" color="#111111" size="36rpx" />
+    </view>
+    <view class="scan-btn" bindtap="goAdd">
+      <t-icon name="add" color="white" />
+    </view>
+  </view>
+
+  <!-- 商品列表（scroll-view，自带下拉刷新） -->
+  <scroll-view scroll-y class="inv-list" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh" style="flex: 1; min-height: 0;">
+    <view class="list-inner">
+      <!-- 低库存预警汇总条 -->
+      <view wx:if="{{soldOutCount > 0 || lowCount > 0}}" class="warn-bar">
+        <t-icon name="info-circle" color="#d97706" size="32rpx" />
+        <text wx:if="{{soldOutCount > 0}}" class="warn-text off-text">售罄 {{soldOutCount}} 件</text>
+        <text wx:if="{{lowCount > 0}}" class="warn-text">低库存（≤10）{{lowCount}} 件</text>
+        <text class="warn-hint">点击商品可入库</text>
+      </view>
+
+      <view wx:if="{{loading && list.length === 0}}" class="tip">加载中…</view>
+      <view wx:elif="{{list.length === 0}}" class="tip">
+        <view class="tip-title">暂无商品</view>
+        <view class="tip-sub">下拉刷新或换关键词试试</view>
+      </view>
+
+      <view style="display: flex; flex-direction: column; gap: 24rpx;">
+        <view wx:for="{{list}}" wx:key="id" class="row card" data-idx="{{index}}" bindtap="openRow">
+          <image wx:if="{{item.image}}" class="row-thumb" src="{{item.image}}" mode="aspectFill" />
+          <view class="row-main">
+            <text class="row-name">{{item.name}}</text>
+            <text class="row-sub">{{item.barcode || '无条码'}} · ¥{{item.price}}{{item.spec ? ' · ' + item.spec : ''}}</text>
+          </view>
+          <view class="row-stock">
+            <view class="stock-num {{item.stock <= 0 ? 'off' : item.stock <= 10 ? 'low' : ''}}">
+              {{item.stock <= 0 ? '售罄' : item.stock}}
+            </view>
+            <view class="stock-unit {{item.stock <= 0 ? 'off' : ''}}">{{item.stock > 0 ? item.unit : ''}}</view>
+            <view class="row-arrow">›</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 商品操作（出入库；编辑跳转商品页） -->
+<page-container show="{{sheetShow}}" overlay="{{true}}" position="bottom" round="{{true}}" close-on-click-overlay="{{true}}" bind:close="closeSheet">
+  <view class="sheet-body" wx:if="{{sheet}}">
+    <view class="bar-line"></view>
+
+    <view style="display: flex; align-items: center; justify-content: space-between;">
+      <text class="s-name">{{sheet.name}}</text>
+      <text class="edit-link" bindtap="goEditProduct">编辑商品</text>
+    </view>
+    <text class="s-sub">{{sheet.barcode || '无条码'}} · 单价 ¥{{sheet.price}}{{sheet.spec ? ' · ' + sheet.spec : ''}}</text>
+    <view class="s-stock">
+      <text class="s-label">当前库存</text>
+      <text class="s-num {{sheet.stock <= 0 ? 'off' : ''}}">{{sheet.stock}} {{sheet.unit}}</text>
+    </view>
+
+    <!-- 出入库备注（选填） -->
+    <view class="s-remark">
+      <input class="remark-input" placeholder="备注（选填，如：供应商补货 / 报损）" placeholder-class="ph" value="{{remark}}" bindinput="onRemarkInput" maxlength="50" />
+    </view>
+
+    <view class="s-btns">
+      <view class="s-btn ghost" bindtap="stockOut" disabled="{{changing}}">出库</view>
+      <view class="s-btn solid" bindtap="stockIn" disabled="{{changing}}">入库</view>
+    </view>
+  </view>
+</page-container>

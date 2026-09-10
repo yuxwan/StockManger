@@ -35,6 +35,9 @@ public class Product {
     /** 存放位置 */
     private String location;
 
+    /** 商品图 URL */
+    private String image;
+
     /** 有效期（D-天 M-月 Y-年） */
     private String expiry;
 

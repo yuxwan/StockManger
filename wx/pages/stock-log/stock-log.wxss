@@ -1,0 +1,4 @@
+/* pages/stock-log/stock-log.wxss */
+page {
+  background: #f4f4f5;
+}

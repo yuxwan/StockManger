@@ -63,8 +63,9 @@ export function hasPermission(perm) {
 
 /** 过滤 type=3（按钮/权限）节点，仅用于侧边栏等菜单渲染 */
 export function filterMenuButtons(menus = []) {
+  // 兼容 type 可能为字符串/空的情况：数值化后再判，避免按钮(type=3)漏网显示成菜单
   return menus
-    .filter(m => m.type !== 3)
+    .filter(m => Number(m.type) !== 3)
     .map(m => ({
       ...m,
       children: m.children && m.children.length ? filterMenuButtons(m.children) : undefined

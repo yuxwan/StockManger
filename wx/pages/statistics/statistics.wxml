@@ -1,0 +1,71 @@
+<!--pages/statistics/statistics.wxml-->
+<scroll-view scroll-y style="background-color: #f9f9f9; height: 100vh;" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
+  <view style="padding: 24rpx 32rpx; background-color: white;">
+    <view style="font-size: small; color: #999;">经营数据</view>
+    <view style="display: flex; align-items: center; justify-content: space-between;">
+      <view style="font-size: large; font-weight: bold;">统计</view>
+      <view>
+        <picker mode="selector" range="{{rangeNames}}" value="{{rangeIndex}}" bindchange="onRangeChange">
+          <view style="display: flex; gap: 6rpx; align-items: center;">
+            <view style="font-weight: bold;">{{rangeLabel}}</view>
+            <t-icon name="chevron-down-s" />
+          </view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <view style="display: flex; flex-direction: column; gap: 24rpx; padding: 24rpx;">
+    <view style="padding: 48rpx; background-color: black; color: white; border-radius: 32rpx; display: flex; flex-direction: column; gap: 24rpx;">
+      <view>
+        <view style="color: #999">{{rangeLabel}}营业额</view>
+        <view style="font-size: x-large; font-weight: bold;">{{ today.revenueText }}</view>
+      </view>
+      <t-divider />
+      <view style="display: flex; align-items: center; justify-content: space-between;">
+        <view style="text-align: center;">
+          <view style="font-size: small; color: #a9a9ad;">订单数</view>
+          <view style="font-size: large; font-weight: bold; margin-top: 4rpx;">{{ today.orders }}</view>
+        </view>
+        <view style="text-align: center;">
+          <view style="font-size: small; color: #a9a9ad;">客单价</view>
+          <view style="font-size: large; font-weight: bold; margin-top: 4rpx;">{{ today.avgText }}</view>
+        </view>
+        <view style="text-align: center;">
+          <view style="font-size: small; color: #a9a9ad;">较昨日</view>
+          <view style="font-size: large; font-weight: bold; color: {{today.ytdColor}}; margin-top: 4rpx;">{{ today.ytdText }}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view style="display: flex; align-items: center; justify-content: space-between;">
+        <view style="font-weight: bold;">营业额</view>
+        <view style="font-size: small; color: #999;">单位：元</view>
+      </view>
+      <canvas type="2d" id="weekChart" class="week-chart" style="width: 100%; height: 320rpx; margin-top: 40rpx;"></canvas>
+    </view>
+
+    <view style="display: flex; flex-direction: column; gap: 24rpx;">
+      <view style="display: flex; align-items: center; justify-content: space-between;">
+        <view style="font-weight: bold;">热销产品</view>
+        <view style="font-size: small; color: #999;">查看库存</view>
+      </view>
+      <view wx:if="{{top.length === 0}}" class="card" style="text-align: center; color: #999; font-size: small;">暂无热销数据</view>
+      <view wx:for="{{top}}" wx:key="rank" class="card" style="display: flex; align-items: center; justify-content: space-between;">
+        <view style="display: flex; align-items: center; gap: 24rpx;">
+          <view style="width: 48rpx; height: 48rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; font-weight: bold; background-color: {{item.bg}}; color: {{item.fg}};">
+            {{ item.rank }}
+          </view>
+          <view>
+            <view>{{ item.name }}</view>
+            <view style="font-size: small; color: #999">{{ item.qtyText }}</view>
+          </view>
+        </view>
+        <view>
+          {{ item.revenueText }}
+        </view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

@@ -1,0 +1,306 @@
+/* pages/inventory/inventory.wxss */
+/* 头部 */
+.pos-head {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 24rpx;
+}
+
+.head-sub {
+  display: block;
+  font-size: small;
+  color: #9a9a9e;
+}
+
+.head-title {
+  display: block;
+  margin-top: 4rpx;
+  font-size: large;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+}
+
+.scan-btn {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.head-btn {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 低库存预警条 */
+.warn-bar {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  background: #fef6e7;
+  border: 2rpx solid #f5dfb6;
+  border-radius: 20rpx;
+  padding: 18rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.warn-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.off-text {
+  color: #e5484d;
+}
+
+.warn-hint {
+  margin-left: auto;
+  font-size: 22rpx;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.scan-img {
+  width: 44rpx;
+  height: 44rpx;
+}
+/* 列表 */
+.tip {
+  padding: 140rpx 0;
+  text-align: center;
+  color: #9a9a9e;
+}
+
+.tip-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.tip-sub {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row-thumb {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 20rpx;
+  background: #f4f4f5;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+
+.row-main {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16rpx;
+}
+
+.row-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.row-sub {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #9a9a9e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-stock {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+  flex-shrink: 0;
+}
+
+.stock-num {
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.stock-num.low {
+  color: #d97706;
+}
+
+.stock-num.off {
+  color: #ef4444;
+  font-size: 28rpx;
+}
+
+.stock-unit {
+  font-size: 22rpx;
+  color: #9a9a9e;
+}
+
+.stock-unit.off {
+  display: none;
+}
+
+.row-arrow {
+  margin-left: 10rpx;
+  color: #d4d4d8;
+  font-size: 34rpx;
+}
+
+/* 出入库 sheet */
+.sheet-body {
+  background: var(--surface);
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 36rpx;
+}
+
+.bar-line {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #e4e4e7;
+  margin: 0 auto 28rpx;
+}
+
+.s-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.s-sub {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.s-stock {
+  margin-top: 28rpx;
+  background: #f4f4f5;
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.s-label {
+  font-size: 26rpx;
+  color: #9a9a9e;
+}
+
+.s-num {
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.s-num.off {
+  color: #ef4444;
+}
+
+.s-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.s-btn {
+  flex: 1;
+  height: 96rpx;
+  border-radius: 24rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.s-btn.solid {
+  background: #111111;
+  color: #ffffff;
+}
+
+.s-btn.ghost {
+  background: var(--surface);
+  color: #111111;
+  border: 2rpx solid #111111;
+  box-sizing: border-box;
+}
+
+/* 出入库备注输入 */
+.s-remark {
+  margin-top: 24rpx;
+  background: #f4f4f5;
+  border-radius: 20rpx;
+  padding: 0 28rpx;
+}
+
+.remark-input {
+  height: 88rpx;
+  font-size: 28rpx;
+  color: #18181b;
+}
+
+/* 编辑资料入口 */
+.edit-link {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #111111;
+  padding: 8rpx 0 8rpx 24rpx;
+}
+
+/* 页面整体：头部固定 + 列表滚动 */
+.inv-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+}
+
+.search-head {
+  background: var(--surface);
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex-shrink: 0;
+}
+
+.search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  background: #f4f4f5;
+  padding: 18rpx 24rpx;
+  border-radius: 24rpx;
+}
+
+.inv-list {
+  flex: 1;
+  min-height: 0;
+}
+
+.list-inner {
+  padding: 24rpx 32rpx;
+}
