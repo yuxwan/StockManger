@@ -1,4 +1,4 @@
-<scroll-view scroll-y class="pa-page">
+<view class="pa-page">
   <view class="group-card card">
     <!-- 商品图片（上传到 BASE_UPLOAD_URL，返回 URL 随商品保存） -->
     <view class="img-row">
@@ -108,4 +108,4 @@
       </view>
     </view>
   </view>
-</scroll-view>
+</view>

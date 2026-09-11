@@ -1,13 +1,6 @@
 .d-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: #fafafa;
-}
-
-.d-scroll {
-  flex: 1;
-  min-height: 0;
+  min-height: 100vh;
 }
 
 .d-inner {

@@ -13,8 +13,8 @@
     </view>
   </view>
 
-  <!-- 商品列表（scroll-view，自带下拉刷新） -->
-  <scroll-view scroll-y class="inv-list" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh" bindscrolltolower="loadMore" lower-threshold="80" style="flex: 1; min-height: 0;">
+  <!-- 商品列表（页面原生滚动，下拉刷新/上拉加载走页面事件） -->
+  <view class="inv-list">
     <view class="list-inner">
       <!-- 低库存预警汇总条 -->
       <view wx:if="{{soldOutCount > 0 || lowCount > 0}}" class="warn-bar">
@@ -52,7 +52,7 @@
       <view wx:if="{{loadingMore}}" class="load-tip">加载中…</view>
       <view wx:elif="{{list.length > 0 && !hasMore}}" class="load-tip done">— 没有更多了 —</view>
     </view>
-  </scroll-view>
+  </view>
 </view>
 
 <!-- 商品操作（出入库；编辑跳转商品页） -->

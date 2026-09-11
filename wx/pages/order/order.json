@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "订单记录",
+  "backgroundColor": "#fafafa",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 80,
   "usingComponents": {}
 }

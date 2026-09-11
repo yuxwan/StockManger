@@ -1,6 +1,6 @@
 .pa-page {
-  /* 底部留白叠加 iPhone 安全区，避免内容被 Home 条遮挡 */
-  height: 100vh;
+  /* 页面原生滚动；底部留白叠加 iPhone 安全区，避免内容被 Home 条遮挡 */
+  min-height: 100vh;
 }
 
 /* OCR 文字块选择弹框 */
@@ -90,7 +90,7 @@
 }
 
 .group-card {
-  padding: 16rpx 32rpx calc(env(safe-area-inset-bottom));
+  padding: 16rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
 }
 
 /* 商品图片区 */

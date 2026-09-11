@@ -77,6 +77,8 @@ function onSearchInput(val) {
 onMounted(async () => {
   window.addEventListener('barcode-scanned', handleBarcodeEvent)
 
+  loadHeldOrders()
+
   await Promise.all([fetchProducts(), fetchStaffList()])
 
   // 处理从其他页面扫码跳转
@@ -170,6 +172,67 @@ function handleQtyInput(id, val) {
     }
     item.qty = val
   }
+}
+
+// ── 挂单/取单 ──
+const heldOrders = ref([])
+const heldOrdersShow = ref(false)
+
+const HELD_KEY = 'pos_held_orders'
+
+function loadHeldOrders() {
+  try {
+    heldOrders.value = JSON.parse(localStorage.getItem(HELD_KEY) || '[]')
+  } catch { heldOrders.value = [] }
+}
+
+function saveHeldOrders() {
+  localStorage.setItem(HELD_KEY, JSON.stringify(heldOrders.value))
+}
+
+function holdOrder() {
+  if (cartItems.value.length === 0) {
+    message.warning('购物车为空，无法挂单')
+    return
+  }
+  const order = {
+    id: Date.now(),
+    time: new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+    items: JSON.parse(JSON.stringify(cartItems.value)),
+    discount: discount.value,
+    payment: payment.value
+  }
+  heldOrders.value.unshift(order)
+  saveHeldOrders()
+  cart.value = {}
+  discount.value = 0
+  message.success('已挂单，可继续服务下一位顾客')
+}
+
+function retrieveOrder(order) {
+  cart.value = {}
+  order.items.forEach(item => {
+    cart.value[item.id] = { ...item }
+  })
+  discount.value = order.discount || 0
+  payment.value = order.payment || 'wechat'
+  heldOrders.value = heldOrders.value.filter(o => o.id !== order.id)
+  saveHeldOrders()
+  heldOrdersShow.value = false
+  message.success('已取单，继续结算')
+}
+
+function deleteHeldOrder(order) {
+  heldOrders.value = heldOrders.value.filter(o => o.id !== order.id)
+  saveHeldOrders()
+}
+
+function heldTotal(order) {
+  const sub = order.items.reduce((s, i) => s + i.price * i.qty, 0)
+  if (order.discount > 0 && order.discount < 100) {
+    return Math.round(sub * (100 - order.discount) / 100 * 100) / 100
+  }
+  return Math.round(sub * 100) / 100
 }
 
 // ── 临时商品（未入库，直接录入名称/单价/数量结算） ──
@@ -304,7 +367,7 @@ const total = computed(() => {
 
     <!-- 右边：购物车 + 结算 -->
     <n-card class="flex-[1]">
-      <div class="min-w-[280px] max-w-[400px] flex flex-col gap-4 h-full">
+      <div class="min-w-[300px] max-w-[400px] flex flex-col gap-4 h-full">
         <div class="flex items-center justify-between">
           <h3
             class="text-sm font-body font-semibold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">
@@ -318,7 +381,18 @@ const total = computed(() => {
               style="width:110px"
             />
             <button v-if="cartItems.length > 0"
-              class="text-xs text-on-surface-variant/50 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 font-body"
+              class="text-xs px-2 py-1 rounded-md text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-body font-medium"
+              @click="holdOrder">
+              挂单
+            </button>
+            <button
+              class="text-xs px-2 py-1 rounded-md text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 font-body font-medium relative"
+              @click="heldOrdersShow = true">
+              取单
+              <span v-if="heldOrders.length > 0" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] flex items-center justify-center leading-none">{{ heldOrders.length }}</span>
+            </button>
+            <button v-if="cartItems.length > 0"
+              class="text-xs px-2 py-1 text-on-surface-variant/50 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 font-body"
               @click="cart = {}">
               清空
             </button>
@@ -473,6 +547,44 @@ const total = computed(() => {
         <div class="flex items-center justify-end gap-2 mt-6">
           <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors" @click="tmpShow = false">取消</button>
           <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80 transition-opacity" @click="addTmpProduct">添加</button>
+        </div>
+      </div>
+    </n-modal>
+
+    <!-- 挂单列表弹窗 -->
+    <n-modal :show="heldOrdersShow" :mask-closable="true" transform-origin="center"
+      :on-update:show="(v) => { if (!v) heldOrdersShow = false }">
+      <div class="relative w-[460px] rounded-2xl bg-surface dark:bg-[#252525] p-6 shadow-xl border border-outline-variant/20 dark:border-[#333]">
+        <h3 class="text-base font-body font-bold text-on-surface dark:text-inverse-on-surface mb-4">挂单列表</h3>
+        <div v-if="heldOrders.length === 0" class="py-12 text-center text-sm text-on-surface-variant/50 dark:text-gray-500">
+          暂无挂单
+        </div>
+        <div v-else class="flex flex-col gap-3 max-h-[400px] overflow-auto">
+          <div v-for="order in heldOrders" :key="order.id"
+            class="flex items-center justify-between p-3 rounded-lg bg-black/5 dark:bg-white/5">
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-body font-semibold text-on-surface dark:text-inverse-on-surface truncate">
+                {{ order.items.map(i => i.name).join('、') }}
+              </div>
+              <div class="flex items-center gap-3 text-xs text-on-surface-variant dark:text-gray-400 mt-1">
+                <span>{{ order.time }}</span>
+                <span>{{ order.items.reduce((s, i) => s + i.qty, 0) }} 件</span>
+                <span class="font-mono font-semibold">¥{{ heldTotal(order) }}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 ml-3">
+              <button class="px-3 py-1.5 rounded-md text-xs font-body font-semibold text-white bg-black dark:bg-white dark:text-black hover:opacity-80"
+                @click="retrieveOrder(order)">取单</button>
+              <button class="w-7 h-7 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                @click="deleteHeldOrder(order)">
+                <Icon icon="mdi:delete-outline" width="16" />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button class="h-9 px-4 rounded-xl text-sm font-body font-semibold text-on-surface-variant dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            @click="heldOrdersShow = false">关闭</button>
         </div>
       </div>
     </n-modal>

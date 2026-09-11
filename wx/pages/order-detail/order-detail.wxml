@@ -1,7 +1,6 @@
 <view class="d-page">
-  <!-- 内容（可下拉刷新） -->
-  <scroll-view scroll-y class="d-scroll" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
-    <view class="d-inner">
+  <!-- 内容（页面原生滚动，可下拉刷新） -->
+  <view class="d-inner">
       <!-- 加载/空态 -->
       <view wx:if="{{loading && !order}}" class="d-tip">加载中…</view>
       <view wx:elif="{{!order}}" class="d-tip">
@@ -65,8 +64,7 @@
         <!-- 退款按钮（仅已完成） -->
         <view wx:if="{{order.status === 'completed'}}" class="refund-btn" bindtap="openRefund">发起退款</view>
       </block>
-    </view>
-  </scroll-view>
+  </view>
 
   <!-- 退款确认 -->
   <page-container show="{{refundShow}}" overlay="{{true}}" position="bottom" round="{{true}}" duration="{{220}}" close-on-click-overlay="{{true}}" bind:close="closeRefund">

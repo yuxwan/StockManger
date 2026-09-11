@@ -2,18 +2,90 @@
 const { get, post } = require('../../utils/request')
 
 const CART_KEY = 'pos_cart'
+const HELD_KEY = 'pos_held_orders'
 Page({
   data: {
     items: [],
     totalText: '0.00',
-    scanResult: null, // { name, barcode, price }
+    scanResult: null,
     scanLoading: false,
     tmp: { name: '', price: '', qty: '1' },
-    tmpShow: false
+    heldOrders: [],
+    sheetShow: false,
+    sheetType: ''
   },
 
   onShow() {
     this.loadCart()
+    this.loadHeldOrders()
+  },
+
+  loadHeldOrders() {
+    try {
+      const h = wx.getStorageSync(HELD_KEY)
+      this.setData({ heldOrders: Array.isArray(h) ? h : [] })
+    } catch (e) {
+      this.setData({ heldOrders: [] })
+    }
+  },
+
+  holdOrder() {
+    if (!this.data.items.length) {
+      wx.showToast({ title: '购物车为空', icon: 'none' })
+      return
+    }
+    const now = new Date()
+    const pad = n => n < 10 ? '0' + n : '' + n
+    const time = pad(now.getMonth() + 1) + '/' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())
+    const order = {
+      id: Date.now(),
+      time,
+      items: this.data.items.map(i => Object.assign({}, i)),
+      totalText: this.data.totalText
+    }
+    const held = [order].concat(this.data.heldOrders)
+    wx.setStorageSync(HELD_KEY, held)
+    this.setData({ heldOrders: held, items: [] })
+    this.recalc()
+    wx.showToast({ title: '已挂单', icon: 'success' })
+  },
+
+  retrieveOrder(e) {
+    const id = e.currentTarget.dataset.id
+    const order = this.data.heldOrders.find(o => o.id === id)
+    if (!order) return
+    const held = this.data.heldOrders.filter(o => o.id !== id)
+    wx.setStorageSync(HELD_KEY, held)
+    this.setData({
+      heldOrders: held,
+      items: order.items.map(i => Object.assign({}, i)),
+      sheetShow: false
+    })
+    this.recalc()
+    wx.showToast({ title: '已取单', icon: 'success' })
+  },
+
+  deleteHeldOrder(e) {
+    const id = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '删除挂单',
+      content: '确定删除该挂单吗？',
+      confirmColor: '#dc2626',
+      success: (res) => {
+        if (!res.confirm) return
+        const held = this.data.heldOrders.filter(o => o.id !== id)
+        wx.setStorageSync(HELD_KEY, held)
+        this.setData({ heldOrders: held })
+      }
+    })
+  },
+
+  closeSheet() {
+    this.setData({ sheetShow: false })
+  },
+
+  openHeld() {
+    this.setData({ sheetShow: true, sheetType: 'held' })
   },
 
   // 进入页面读回购物车（跨页/切 tab 保持一致）
@@ -175,20 +247,12 @@ Page({
 
   // ── 添加临时商品（无条码，手工录入） ──
   openTmp() {
-    this.setData({ 'tmp.name': '', 'tmp.price': '', 'tmp.qty': '1', tmpShow: true })
+    this.setData({ 'tmp.name': '', 'tmp.price': '', 'tmp.qty': '1', sheetShow: true, sheetType: 'tmp' })
   },
 
   onTmpName(e) { this.setData({ 'tmp.name': e.detail.value }) },
   onTmpPrice(e) { this.setData({ 'tmp.price': e.detail.value }) },
   onTmpQty(e) { this.setData({ 'tmp.qty': e.detail.value }) },
-
-  closeTmp() {
-    this.setData({ tmpShow: false })
-  },
-
-  onTmpContainerClose() {
-    this.setData({ tmpShow: false })
-  },
 
   confirmTmp() {
     const t = this.data.tmp
@@ -202,7 +266,7 @@ Page({
     const items = this.data.items.slice()
     // 临时商品用负 id 占位：避免与数据库真实商品 id 冲突
     items.push({ id: -Date.now(), name, price, qty })
-    this.setData({ items, tmpShow: false })
+    this.setData({ items, sheetShow: false })
     this.recalc()
   },
 

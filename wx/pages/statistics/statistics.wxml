@@ -1,6 +1,6 @@
 <!--pages/statistics/statistics.wxml-->
-<scroll-view scroll-y style="background-color: #f9f9f9; height: 100vh;" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
-  <view style="padding: 24rpx 32rpx; background-color: white;">
+<view class="st-page">
+  <view class="st-head">
     <view style="font-size: small; color: #999;">经营数据</view>
     <view style="display: flex; align-items: center; justify-content: space-between;">
       <view style="font-size: large; font-weight: bold;">统计</view>
@@ -15,7 +15,7 @@
     </view>
   </view>
 
-  <view style="display: flex; flex-direction: column; gap: 24rpx; padding: 24rpx;">
+  <view class="st-body">
     <view style="padding: 48rpx; background-color: black; color: white; border-radius: 32rpx; display: flex; flex-direction: column; gap: 24rpx;">
       <view>
         <view style="color: #999">{{rangeLabel}}营业额</view>
@@ -67,4 +67,4 @@
       </view>
     </view>
   </view>
-</scroll-view>
+</view>

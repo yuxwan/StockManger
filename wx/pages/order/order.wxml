@@ -8,10 +8,8 @@
     </view>
   </view>
 
-  <!-- 列表 -->
-  <scroll-view scroll-y class="ol-scroll" refresher-enabled
-    refresher-triggered="{{refreshing}}" bindrefresherrefresh="onRefresh">
-    <view class="ol-inner" style="display: flex; flex-direction: column; gap: 24rpx;">
+  <!-- 列表（页面原生滚动，筛选条跟随滚动） -->
+  <view class="ol-inner" style="display: flex; flex-direction: column; gap: 24rpx;">
       <view wx:if="{{loading && shown.length === 0}}" class="tip">加载中…</view>
       <view wx:elif="{{shown.length === 0}}" class="tip">
         <view class="tip-t">暂无相关订单</view>
@@ -31,6 +29,7 @@
           <text class="oc-money">¥{{item.totalText}}</text>
         </view>
       </view>
-    </view>
-  </scroll-view>
+
+      <view wx:if="{{!hasMore && shown.length > 0}}" class="tip" style="padding: 24rpx 0;">— 没有更多了 —</view>
+  </view>
 </view>

@@ -1,6 +1,6 @@
 <!--pages/my/my.wxml-->
-<scroll-view scroll-y style="height: 100vh;">
-  <view style="padding: 24rpx">
+<view class="my-page">
+  <view style="padding: 24rpx 24rpx calc(40rpx + env(safe-area-inset-bottom));">
     <!-- 用户卡片（黑底白字，参考样例；未登录点击跳转登录页） -->
     <view class="user-card" bindtap="onUserCardTap">
       <view class="avatar-block">
@@ -65,5 +65,4 @@
     <view class="logout-btn" bindtap="onLogout">退出登录</view>
     </view>
   </view>
-
-</scroll-view>
+</view>

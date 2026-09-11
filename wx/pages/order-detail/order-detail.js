@@ -14,7 +14,6 @@ function fmt(n) { return (Number(n) || 0).toFixed(2) }
 
 Page({
   data: {
-    refreshing: false,
     loading: false,
     order: null,
     items: [],
@@ -33,10 +32,13 @@ Page({
     this.load()
   },
 
-  onRefresh() {
-    if (this.data.refreshing) return
-    this.setData({ refreshing: true })
-    this.load().finally(() => this.setData({ refreshing: false }))
+  // 页面原生下拉刷新
+  async onPullDownRefresh() {
+    try {
+      await this.load()
+    } finally {
+      wx.stopPullDownRefresh()
+    }
   },
 
   async fetchUsers() {

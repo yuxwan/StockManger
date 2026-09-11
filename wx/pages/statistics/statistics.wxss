@@ -2,3 +2,21 @@
 page{
   --td-divider-color: #999
 }
+
+/* 页面原生滚动，头部随页面一起滚动 */
+.st-page {
+  min-height: 100vh;
+  background-color: #f9f9f9;
+}
+
+.st-head {
+  padding: 24rpx 32rpx;
+  background-color: #fff;
+}
+
+.st-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 24rpx 24rpx calc(40rpx + env(safe-area-inset-bottom));
+}

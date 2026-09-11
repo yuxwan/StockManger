@@ -4,5 +4,6 @@
   },
   "backgroundColor": "#fafafa",
   "backgroundTextStyle": "dark",
-  "disableScroll": true
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 80
 }

@@ -31,7 +31,6 @@ Page({
   data: {
     rangeNames: RANGES.map(r => r.label),
     rangeIndex: 0,
-    refreshing: false,
     rangeLabel: '今日',
     week: [],
     weekTotalText: '¥--',
@@ -76,17 +75,15 @@ Page({
     } catch (e) { /* request 已 toast */ }
   },
 
-  // scroll-view 下拉刷新：重拉基础数据 + 当前范围黑卡
-  async onRefresh() {
-    if (this.data.refreshing) return
-    this.setData({ refreshing: true })
+  // 页面原生下拉刷新：重拉基础数据 + 当前范围黑卡
+  async onPullDownRefresh() {
     try {
       await Promise.all([
         this.fetchBase(),
         this.fetchBlack(RANGES[this.data.rangeIndex])
       ])
     } finally {
-      this.setData({ refreshing: false })
+      wx.stopPullDownRefresh()
     }
   },
 

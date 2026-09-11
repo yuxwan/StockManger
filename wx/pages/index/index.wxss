@@ -1,8 +1,6 @@
 /* pages/index/index.wxss — 收银台样式 */
 .pos-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
   background: #f4f4f5;
 }
 
@@ -46,10 +44,18 @@
   height: 44rpx;
 }
 
-/* 列表区 */
+/* 列表区（页面原生滚动） */
 .body {
-  flex: 1;
-  min-height: 0;
+  min-height: 40vh;
+}
+
+.body-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 24rpx;
+  /* 避让固定在底部的结算栏 */
+  padding-bottom: 180rpx;
 }
 
 .empty {
@@ -186,16 +192,21 @@
   font-weight: 700;
 }
 
-/* 底部结算 */
+/* 底部结算（固定在底部，tabBar 页面内 bottom:0 即 tabBar 上沿） */
 .bar {
-  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
   background: var(--surface);
   border-top: 2rpx solid #e5e5e7;
-  padding: 32rpx;
+  padding: 24rpx 32rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24rpx;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 .bar-info {
@@ -432,7 +443,7 @@
   font-weight: 800;
 }
 
-/* 头部右侧：清空 + 扫码 */
+/* 头部右侧：挂单 + 取单 + 清空 + 扫码 */
 .head-actions {
   display: flex;
   align-items: center;
@@ -449,19 +460,101 @@
   visibility: hidden;
 }
 
-/* 头部右侧：清空 + 扫码 */
-.head-actions {
+/* 挂单按钮 */
+.hold-btn {
+  position: relative;
+  font-size: 26rpx;
+  color: #b45309;
+  padding: 8rpx 4rpx;
+
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 6rpx;
 }
 
-.clear-btn {
-  font-size: 26rpx;
-  color: #6b6b70;
-  padding: 8rpx 4rpx;
-}
-
-.clear-btn.hide {
+.hold-btn.hide {
   visibility: hidden;
+}
+
+.hold-badge {
+  min-width: 28rpx;
+  height: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
+  border-radius: 999rpx;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 20rpx;
+  padding: 0 6rpx;
+  margin-left: 4rpx;
+  vertical-align: middle;
+}
+
+/* 挂单列表 */
+.held-empty {
+  text-align: center;
+  padding: 120rpx 0;
+  color: #9a9a9e;
+  font-size: 28rpx;
+}
+
+.held-list {
+  max-height: 60vh;
+  padding: 0 8rpx;
+}
+
+.held-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.held-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.held-names {
+  font-size: 28rpx;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.held-meta {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #9a9a9e;
+}
+
+.held-total {
+  font-weight: 700;
+  color: #111111;
+}
+
+.held-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-left: 16rpx;
+}
+
+.held-take {
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+  background: #111111;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.held-del {
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  color: #dc2626;
+  font-size: 24rpx;
 }

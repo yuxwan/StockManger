@@ -42,7 +42,6 @@ Page({
     keyword: '',
     list: [],
     loading: false,
-    refreshing: false,
     loadingMore: false,
     hasMore: true,
     page: 1,
@@ -60,15 +59,18 @@ Page({
     this.load()
   },
 
-  // scroll-view 下拉刷新（仅列表区域触发，搜索头不参与）
-  async onRefresh() {
-    if (this.data.refreshing) return
-    this.setData({ refreshing: true })
+  // 页面原生下拉刷新
+  async onPullDownRefresh() {
     try {
       await this.load()
     } finally {
-      this.setData({ refreshing: false })
+      wx.stopPullDownRefresh()
     }
+  },
+
+  // 页面上拉触底：加载下一页
+  onReachBottom() {
+    this.loadMore()
   },
 
   // 首次加载 / 下拉刷新 / 搜索：重置到第一页

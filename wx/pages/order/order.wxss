@@ -1,15 +1,12 @@
 .ol-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: #fafafa;
+  min-height: 100vh;
 }
 
-/* 筛选 */
+/* 筛选（随页面一起滚动） */
 .ol-head {
   background: var(--surface);
   padding: 20rpx 32rpx;
-  flex-shrink: 0;
 }
 
 .chips {
@@ -34,11 +31,6 @@
 }
 
 /* 列表 */
-.ol-scroll {
-  flex: 1;
-  min-height: 0;
-}
-
 .ol-inner {
   padding: 24rpx 32rpx calc(40rpx + env(safe-area-inset-bottom));
 }

@@ -7,16 +7,23 @@
       <text class="head-title">收银台</text>
     </view>
     <view class="head-actions">
-      <text class="clear-btn {{items.length === 0 ? 'hide' : ''}}" bindtap="clearAll">清空</text>
+      <view wx:if="{{ items.length > 0 }}" class="hold-btn" bindtap="holdOrder">挂单</view>
+      <view class="hold-btn" bindtap="openHeld">
+        取单
+        <view wx:if="{{heldOrders.length > 0}}" class="hold-badge">
+          {{heldOrders.length}}
+        </view>
+      </view>
+      <view wx:if="{{ items.length > 0 }}" class="clear-btn" bindtap="clearAll">清空</view>
       <view class="scan-btn" bindtap="onScanTap">
         <t-icon name="scan" color="black" />
       </view>
     </view>
   </view>
 
-  <!-- 商品列表 -->
-  <scroll-view scroll-y class="body">
-    <view style="display: flex; flex-direction: column; gap: 24rpx; padding: 24rpx;">
+  <!-- 商品列表（页面原生滚动，头部跟随，结算栏固定底部） -->
+  <view class="body">
+    <view class="body-inner">
       <view wx:for="{{items}}" wx:key="id" class="row card">
         <view class="row-info">
           <text class="row-name">{{item.name}}</text>
@@ -28,11 +35,11 @@
           <text class="row-del" data-idx="{{index}}" bindtap="removeItem">删除</text>
           <view class="qty-ctrl">
             <view class="qty-btn {{item.qty <= 1 ? 'disabled' : ''}}" data-idx="{{index}}" bindtap="dec">
-              <t-icon name="remove" color="#111111"/>
+              <t-icon name="remove" color="#111111" />
             </view>
             <input class="qty-input" type="number" value="{{item.qty}}" data-idx="{{index}}" bindinput="onQtyInput" bindblur="onQtyBlur" />
             <view class="qty-btn plus" data-idx="{{index}}" bindtap="inc">
-              <t-icon name="add" color="white"/>
+              <t-icon name="add" color="white" />
             </view>
           </view>
         </view>
@@ -43,7 +50,7 @@
         <text>添加临时商品</text>
       </view>
     </view>
-  </scroll-view>
+  </view>
 
   <!-- 底部结算 -->
   <view class="bar">
@@ -71,10 +78,10 @@
   </view>
 </view>
 
-<!-- 添加临时商品录入（page-container 弹层） -->
-<page-container show="{{tmpShow}}" overlay="{{true}}" position="bottom" round="{{true}}"
-  duration="{{220}}" close-on-click-overlay="{{true}}" bind:close="onTmpContainerClose">
-  <view class="pc">
+<!-- 统一 page-container：临时商品 / 挂单列表（一个页面只能有一个 page-container） -->
+<page-container show="{{sheetShow}}" overlay="{{true}}" position="bottom" round="{{true}}" duration="{{220}}" close-on-click-overlay="{{true}}" bind:close="closeSheet">
+  <!-- 临时商品录入 -->
+  <view wx:if="{{sheetType === 'tmp'}}" class="pc">
     <view class="pc-bar"></view>
     <text class="pc-title">添加临时商品</text>
     <view class="tmp-field">
@@ -92,8 +99,32 @@
       </view>
     </view>
     <view class="pc-btns">
-      <view class="btn-cancel" bindtap="closeTmp">取消</view>
+      <view class="btn-cancel" bindtap="closeSheet">取消</view>
       <view class="btn-add" bindtap="confirmTmp">加入本单</view>
+    </view>
+  </view>
+  <!-- 挂单列表 -->
+  <view wx:elif="{{sheetType === 'held'}}" class="pc">
+    <view class="pc-bar"></view>
+    <text class="pc-title">挂单列表</text>
+    <view wx:if="{{heldOrders.length === 0}}" class="held-empty">暂无挂单</view>
+    <scroll-view wx:else scroll-y class="held-list">
+      <view wx:for="{{heldOrders}}" wx:key="id" class="held-card">
+        <view class="held-info" data-id="{{item.id}}" bindtap="retrieveOrder">
+          <view class="held-names">{{item.items[0].name}}{{item.items.length > 1 ? ' 等' + item.items.length + '件商品' : ''}}</view>
+          <view class="held-meta">
+            <text>{{item.time}}</text>
+            <text class="held-total">¥{{item.totalText}}</text>
+          </view>
+        </view>
+        <view class="held-actions">
+          <view class="held-take" data-id="{{item.id}}" bindtap="retrieveOrder">取单</view>
+          <view class="held-del" data-id="{{item.id}}" catchtap="deleteHeldOrder">删除</view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="pc-btns">
+      <view class="btn-cancel" bindtap="closeSheet">关闭</view>
     </view>
   </view>
 </page-container>

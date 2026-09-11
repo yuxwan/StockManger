@@ -46,7 +46,10 @@ const typeLabels = {
   UPDATE_PRODUCT: '编辑商品',
   DELETE_PRODUCT: '删除商品',
   STOCK_IN: '入库',
-  STOCK_OUT: '出库'
+  STOCK_OUT: '出库',
+  SALE: '收银出库',
+  REFUND: '退款入库',
+  CREATE_ORDER: '创建订单'
 }
 
 const typeIcons = {
@@ -54,7 +57,10 @@ const typeIcons = {
   UPDATE_PRODUCT: 'mdi:pencil-outline',
   DELETE_PRODUCT: 'mdi:delete-outline',
   STOCK_IN: 'mdi:plus-circle-outline',
-  STOCK_OUT: 'mdi:minus-circle-outline'
+  STOCK_OUT: 'mdi:minus-circle-outline',
+  SALE: 'mdi:cart-outline',
+  REFUND: 'mdi:undo-variant',
+  CREATE_ORDER: 'mdi:receipt-text-outline'
 }
 
 const typeColors = {
@@ -62,7 +68,10 @@ const typeColors = {
   UPDATE_PRODUCT: 'text-blue-600 dark:text-blue-400',
   DELETE_PRODUCT: 'text-red-500',
   STOCK_IN: 'text-emerald-600 dark:text-emerald-400',
-  STOCK_OUT: 'text-amber-600 dark:text-amber-400'
+  STOCK_OUT: 'text-amber-600 dark:text-amber-400',
+  SALE: 'text-sky-600 dark:text-sky-400',
+  REFUND: 'text-orange-600 dark:text-orange-400',
+  CREATE_ORDER: 'text-violet-600 dark:text-violet-400'
 }
 
 const pagination = reactive({

@@ -4,7 +4,6 @@
     "pages/product-add/product-add",
     "pages/inventory/inventory",
     "pages/statistics/statistics",
-    "pages/logs/logs",
     "pages/my/my",
     "pages/login/login",
     "pages/order/order",

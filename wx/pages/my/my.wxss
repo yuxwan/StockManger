@@ -1,4 +1,10 @@
 /* pages/my/my.wxss — 我的（Tab4，参考「我的」样例稿） */
+/* 页面原生滚动 */
+.my-page {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
 /* ── 顶部标题 ── */
 .page-title {
   font-size: 40rpx;

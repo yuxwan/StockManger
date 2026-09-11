@@ -2,5 +2,5 @@
   "usingComponents": {
     "t-icon": "tdesign-miniprogram/icon/icon"
   },
-  "disableScroll": true
+  "backgroundColor": "#ffffff"
 }
